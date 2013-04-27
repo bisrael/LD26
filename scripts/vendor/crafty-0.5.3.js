@@ -2359,7 +2359,8 @@ Crafty.c("2D", {
 		this._origin.y = e.o.y - this._y;
 
 		//modify through the setter method
-		this._attr('_rotation', e.theta);
+        //this._attr('_rotation', e.theta);
+        this.rotation -= e.deg
 	},
 
 	/**@
