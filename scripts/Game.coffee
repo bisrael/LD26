@@ -1,8 +1,8 @@
-define ['Crafty', 'Square'], (Crafty, Square) ->
+define ['Crafty', 'Grid'], (Crafty, Grid) ->
 	Game =
 		start: ->
 			Crafty.init(480, 640)
 			Crafty.background('white')
-			Crafty.e(Square).attr(x:100,y:100)
+			new Grid()
 
 	return Game

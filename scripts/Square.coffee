@@ -1,5 +1,15 @@
 define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter, Scheme) ->
 	key = 'Square'
+
+	UP = 0
+	RIGHT = 1
+	DOWN = 2
+	LEFT = 3
+	LIMIT = 4
+
+	DEG = (dir) -> dir*90
+	NEXT = (dir) -> (dir+1)%(LIMIT)
+
 	Crafty.c key,
 		init: ->
 			size = 50
@@ -29,8 +39,15 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 #			@bind('MouseUp', @MouseUp)
 
 		Click: ->
-			@tween({rotation: @attr('rotation') + 90}, 15)
-			#@arrow.tween({rotation: @arrow.attr('rotation') + 90}, 15)
+			next = NEXT(@attr('sqdir'))
+			@attr('sqdir', next)
+			@tween({
+				rotation: if next is 0 then DEG(LIMIT) else DEG(next)
+			}, 15)
+#			fn = ->
+#				@unbind('TweenEnd', fn)
+#				if @rotation is 360 then @rotation = 0
+#			@bind('TweenEnd', fn)
 
 		MouseOver: (e) ->
 			@highlight(15)
@@ -39,6 +56,11 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 		MouseOut: (e) ->
 			@unhighlight(15)
 			@arrow.unhighlight(15)
+
+		randomizeDirection: ->
+			dir = ~~(Math.random() * (LIMIT));
+			@attr('sqdir', dir)
+			@rotation = dir*90;
 
 #		MouseDown: ->
 #		MouseUp: ->
