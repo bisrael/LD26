@@ -39,24 +39,117 @@ define(['Crafty', 'components/Highlighter', 'ColorScheme'], function(Crafty, Hig
       this.attach(this.arrow);
       this.bind('Click', this.Click);
       this.bind('MouseOver', this.MouseOver);
-      return this.bind('MouseOut', this.MouseOut);
+      this.bind('MouseOut', this.MouseOut);
+      this.bind('MouseDown', this.MouseDown);
+      return this.bind('MouseUp', this.MouseUp);
     },
-    Click: function() {
+    Click: function(e) {
       var next;
 
+      if (this.ignoreClick) {
+        this.ignoreClick = false;
+        return;
+      }
       next = NEXT(this.attr('sqdir'));
       this.attr('sqdir', next);
-      return this.tween({
+      this.tween({
         rotation: next === 0 ? DEG(LIMIT) : DEG(next)
       }, 15);
+      this.unbind('TweenEnd', this.TweenEnd);
+      return this.bind('TweenEnd', this.TweenEnd);
+    },
+    TweenEnd: function(e) {
+      if (this.rotation === 360) {
+        this.rotation = 0;
+      }
+      return this.unbind('TweenEnd', this.TweenEnd);
     },
     MouseOver: function(e) {
+      console.log('over', e);
       this.highlight(15);
       return this.arrow.highlight(15);
     },
     MouseOut: function(e) {
       this.unhighlight(15);
-      return this.arrow.unhighlight(15);
+      this.arrow.unhighlight(15);
+      return this.endDragging();
+    },
+    MouseDown: function(e) {
+      this.dragging = true;
+      this.dragStartX = e.realX;
+      this.dragStartY = e.realY;
+      return this.bind('MouseMove', this.MouseMove);
+    },
+    endDragging: function() {
+      if (!this.dragging) {
+        return;
+      }
+      this.dragging = false;
+      this.tween({
+        x: this.anchorX,
+        y: this.anchorY
+      }, 15);
+      return this.unbind('MouseMove', this.MouseMove);
+    },
+    MouseUp: function(e) {
+      return this.endDragging();
+    },
+    MouseMove: function(e) {
+      this.ignoreClick = true;
+      switch (this.attr('sqdir')) {
+        case UP:
+          return this.adjustUp(e);
+        case RIGHT:
+          return this.adjustRight(e);
+        case DOWN:
+          return this.adjustDown(e);
+        case LEFT:
+          return this.adjustLeft(e);
+      }
+    },
+    adjustUp: function(e) {
+      var totalYDiff, ydiff;
+
+      if (!e.webkitMovementY) {
+        return;
+      }
+      ydiff = e.realY - this.lastY;
+      totalYDiff = e.realY - this.dragStartY;
+      if (totalYDiff < -this.h || totalYDiff > 0) {
+        return;
+      }
+      if (this.y + ydiff > this.anchorY) {
+        return;
+      }
+      this.lastY = e.realY;
+      return this.shift(0, ydiff);
+    },
+    adjustDown: function(e) {
+      var totalYDiff, ydiff;
+
+      if (!e.webkitMovementY) {
+        return;
+      }
+      ydiff = e.realY - this.lastY;
+      totalYDiff = e.realY - this.dragStartY;
+      if (totalYDiff > this.h || totalYDiff < 0) {
+        return;
+      }
+      if (this.y + ydiff < this.anchorY) {
+        return;
+      }
+      this.lastY = e.realY;
+      return this.shift(0, ydiff);
+    },
+    adjustRight: function(e) {
+      if (!e.webkitMovementX) {
+
+      }
+    },
+    adjustLeft: function(e) {
+      if (!e.webkitMovementX) {
+
+      }
     },
     randomizeDirection: function() {
       var dir;
@@ -64,6 +157,14 @@ define(['Crafty', 'components/Highlighter', 'ColorScheme'], function(Crafty, Hig
       dir = ~~(Math.random() * LIMIT);
       this.attr('sqdir', dir);
       return this.rotation = dir * 90;
+    },
+    anchorAt: function(x, y) {
+      this.anchorX = x;
+      this.anchorY = y;
+      return this.attr({
+        x: x,
+        y: y
+      });
     }
   });
   return key;

@@ -26,7 +26,7 @@ define(['Crafty', 'Square'], function(Crafty, Square) {
     Grid.prototype.newSquareAt = function(x, y) {
       var e;
 
-      e = Crafty.e(Square).shift(GRIDLOC(x), GRIDLOC(y));
+      e = Crafty.e(Square).anchorAt(GRIDLOC(x), GRIDLOC(y));
       e.randomizeDirection();
       return this._grid[x][y] = e;
     };

@@ -17,7 +17,7 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 					@newSquareAt(col, row)
 
 		newSquareAt: (x,y) ->
-			e = Crafty.e(Square).shift(GRIDLOC(x), GRIDLOC(y))
+			e = Crafty.e(Square).anchorAt(GRIDLOC(x), GRIDLOC(y))
 			e.randomizeDirection()
 			@_grid[x][y] = e
 
