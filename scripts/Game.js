@@ -6,7 +6,10 @@ define(['Crafty', 'Square'], function(Crafty, Square) {
     start: function() {
       Crafty.init(480, 640);
       Crafty.background('white');
-      return Crafty.e(Square);
+      return Crafty.e(Square).attr({
+        x: 100,
+        y: 100
+      });
     }
   };
   return Game;

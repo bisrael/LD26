@@ -47,9 +47,6 @@ define ['Crafty'], (Crafty) ->
 					@rgb(to)
 					return
 
-#				from.r = ~~(from.r + step.r)
-#				from.g = ~~(from.g + step.g)
-#				from.b = ~~(from.b + step.b)
 				from.r += step.r
 				from.g += step.g
 				from.b += step.b
