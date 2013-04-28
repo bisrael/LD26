@@ -17,4 +17,12 @@ define ['Crafty', 'components/TweenColor'], (Crafty, TweenColor) ->
 		unhighlight: (frames = 0) ->
 			@tweenColor(@_h_base, frames)
 
+		bindHighlightMouseEvents: ->
+			@requires('Mouse')
+			@bind('MouseOver', @mouseHighlight)
+			@bind('MouseOut', @mouseUnhighlight)
+
+		mouseHighlight: -> @highlight(15)
+		mouseUnhighlight: -> @unhighlight(15)
+
 	return key

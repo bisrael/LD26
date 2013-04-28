@@ -59,6 +59,9 @@ define(['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], function(
     Click: function(e) {
       var curr, next;
 
+      if (this.dead) {
+        return;
+      }
       curr = this.attr('sqdir');
       next = this.clickButton ? curr - 1 : curr + 1;
       this.rebind('TweenEnd', this.RotateTweenEnd);

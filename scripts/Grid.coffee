@@ -2,22 +2,35 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 
 	class Grid
 		constructor: (levelData) ->
-			@_levelData = levelData
-			@_cols = levelData.length
-			@_colMax = @_cols - 1
-			@_rows = 1
-			@_rowMax = 0
-			@_grid = []
-
 			@_e = Crafty.e('2D, Canvas')
 
+			@setLevelData(levelData)
 			@establishGrid()
 			@center()
 
 		destroy: ->
+			@_grid = null
 			@_e.destroy()
 
+		setLevelData: (data) ->
+			@_levelData = data
+			@_cols = data.length
+			@_colMax = @_cols - 1
+			@_rows = 1
+			@_rowMax = 0
+			@offsetX = 0
+			@offsetY = 0
+
+		isEstablished: -> !!@_grid
+
+		newLevel: (data) ->
+			@clearGrid()
+			@setLevelData(data)
+			@establishGrid()
+			@center()
+
 		establishGrid: ->
+			@_grid = []
 			for col in [0..@_colMax]
 				@_grid[col] = []
 				rowlen = @_levelData[col].length
@@ -35,6 +48,7 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			@bindEvents(e, 'bind')
 
 		bindEvents: (e, method) ->
+			return unless e?
 			e[method]('RotateEnd', @checkConditions)
 			e[method]('InsertEnd', @checkConditions)
 			e[method]('MoveEnd', @checkConditions)
@@ -48,6 +62,7 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			@_e.attach(e)
 
 		nullOut: (e) ->
+			return unless e
 			@setSquareAt(e.gridX, e.gridY, null)
 
 		getSquareAt: (x, y) -> @_grid[x]?[y]
@@ -58,12 +73,15 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 
 		getEntity: -> @_e
 
-		center: ->
+		center: (animate) ->
 			{viewport} = Crafty
 			size = Math.min(viewport.width, viewport.height)
-			offsetX = (size - @getWidth()) / 2
-			offsetY = (size - @getHeight()) / 2
-			@_e.shift(offsetX, offsetY)
+			@offsetX = (size - @getWidth()) / 2
+			@offsetY = (size - @getHeight()) / 2
+			if animate then @_e.tween({x: @offsetX, y: @offsetY})
+			else @_e.shift(@offsetX - @_e.x, @offsetY - @_e.y)
+
+		recenter: -> @center(yes)
 
 		matching: (e) ->
 			{gridX, gridY} = e
@@ -87,6 +105,20 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 				when g.right then checkDir is g.left
 
 			if matching then return toCheck
+
+		isRowBlank: (row) ->
+			for col in [0..@_colMax]
+				return no if @getSquareAt(col, row)
+			return yes
+
+		isColBlank: (col) ->
+			for row in [0..@_rowMax]
+				return no if @getSquareAt(col, row)
+			return yes
+
+		removeBlankRow: (row) ->
+
+		removeBlankCol: (col) ->
 
 		printGridState: ->
 			for row in [0..@_rowMax]
@@ -122,20 +154,25 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 
 			return
 
-		runForGrid: (callback) ->
+		runForGrid: (cellCallback, colCallback) ->
+			return unless @isEstablished()
 			for col in [0..@_colMax]
+				colCallback(col, @_grid[col]) if colCallback
 				for row in [0..@_rowMax]
-					callback(col, row)
+					cellCallback(col, row, @getSquareAt(col, row)) if cellCallback
 			return
 
-		auditGrid: -> @runForGrid (col,row) =>
-			e = @getSquareAt(col,row)
+		clearGrid: -> @runForGrid (col, row, e) =>
+			@nullOut(e)
+			e.destroy()
+
+		auditGrid: -> @runForGrid (col, row, e) =>
 			return unless e
 			if g.gridloc(e.gridX) isnt e.x or g.gridloc(e.gridY) isnt e.y
 				e.color('pink')
 
-		ensureGrid: -> @runForGrid (col, row) =>
-			@newSquareAt(col, row, no) unless @getSquareAt(col, row)
+		ensureGrid: -> @runForGrid (col, row, square) =>
+			@newSquareAt(col, row, no) unless square
 
 		shiftStartingAt: (x, y, dx, dy) ->
 			startX = x - dx

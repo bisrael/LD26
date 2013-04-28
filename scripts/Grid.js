@@ -7,24 +7,42 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
   Grid = (function() {
     function Grid(levelData) {
       this.removeAndReplace = __bind(this.removeAndReplace, this);
-      this.checkConditions = __bind(this.checkConditions, this);      this._levelData = levelData;
-      this._cols = levelData.length;
-      this._colMax = this._cols - 1;
-      this._rows = 1;
-      this._rowMax = 0;
-      this._grid = [];
-      this._e = Crafty.e('2D, Canvas');
+      this.checkConditions = __bind(this.checkConditions, this);      this._e = Crafty.e('2D, Canvas');
+      this.setLevelData(levelData);
       this.establishGrid();
       this.center();
     }
 
     Grid.prototype.destroy = function() {
+      this._grid = null;
       return this._e.destroy();
+    };
+
+    Grid.prototype.setLevelData = function(data) {
+      this._levelData = data;
+      this._cols = data.length;
+      this._colMax = this._cols - 1;
+      this._rows = 1;
+      this._rowMax = 0;
+      this.offsetX = 0;
+      return this.offsetY = 0;
+    };
+
+    Grid.prototype.isEstablished = function() {
+      return !!this._grid;
+    };
+
+    Grid.prototype.newLevel = function(data) {
+      this.clearGrid();
+      this.setLevelData(data);
+      this.establishGrid();
+      return this.center();
     };
 
     Grid.prototype.establishGrid = function() {
       var col, row, rowlen, _i, _ref, _results;
 
+      this._grid = [];
       _results = [];
       for (col = _i = 0, _ref = this._colMax; 0 <= _ref ? _i <= _ref : _i >= _ref; col = 0 <= _ref ? ++_i : --_i) {
         this._grid[col] = [];
@@ -57,6 +75,9 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
     };
 
     Grid.prototype.bindEvents = function(e, method) {
+      if (e == null) {
+        return;
+      }
       e[method]('RotateEnd', this.checkConditions);
       e[method]('InsertEnd', this.checkConditions);
       e[method]('MoveEnd', this.checkConditions);
@@ -76,6 +97,9 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
     };
 
     Grid.prototype.nullOut = function(e) {
+      if (!e) {
+        return;
+      }
       return this.setSquareAt(e.gridX, e.gridY, null);
     };
 
@@ -97,14 +121,25 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
       return this._e;
     };
 
-    Grid.prototype.center = function() {
-      var offsetX, offsetY, size, viewport;
+    Grid.prototype.center = function(animate) {
+      var size, viewport;
 
       viewport = Crafty.viewport;
       size = Math.min(viewport.width, viewport.height);
-      offsetX = (size - this.getWidth()) / 2;
-      offsetY = (size - this.getHeight()) / 2;
-      return this._e.shift(offsetX, offsetY);
+      this.offsetX = (size - this.getWidth()) / 2;
+      this.offsetY = (size - this.getHeight()) / 2;
+      if (animate) {
+        return this._e.tween({
+          x: this.offsetX,
+          y: this.offsetY
+        });
+      } else {
+        return this._e.shift(this.offsetX - this._e.x, this.offsetY - this._e.y);
+      }
+    };
+
+    Grid.prototype.recenter = function() {
+      return this.center(true);
     };
 
     Grid.prototype.matching = function(e) {
@@ -146,6 +181,32 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
         return toCheck;
       }
     };
+
+    Grid.prototype.isRowBlank = function(row) {
+      var col, _i, _ref;
+
+      for (col = _i = 0, _ref = this._colMax; 0 <= _ref ? _i <= _ref : _i >= _ref; col = 0 <= _ref ? ++_i : --_i) {
+        if (this.getSquareAt(col, row)) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    Grid.prototype.isColBlank = function(col) {
+      var row, _i, _ref;
+
+      for (row = _i = 0, _ref = this._rowMax; 0 <= _ref ? _i <= _ref : _i >= _ref; row = 0 <= _ref ? ++_i : --_i) {
+        if (this.getSquareAt(col, row)) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    Grid.prototype.removeBlankRow = function(row) {};
+
+    Grid.prototype.removeBlankCol = function(col) {};
 
     Grid.prototype.printGridState = function() {
       var col, row, sq, str, _i, _j, _ref, _ref1;
@@ -207,23 +268,37 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
       }
     };
 
-    Grid.prototype.runForGrid = function(callback) {
+    Grid.prototype.runForGrid = function(cellCallback, colCallback) {
       var col, row, _i, _j, _ref, _ref1;
 
+      if (!this.isEstablished()) {
+        return;
+      }
       for (col = _i = 0, _ref = this._colMax; 0 <= _ref ? _i <= _ref : _i >= _ref; col = 0 <= _ref ? ++_i : --_i) {
+        if (colCallback) {
+          colCallback(col, this._grid[col]);
+        }
         for (row = _j = 0, _ref1 = this._rowMax; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; row = 0 <= _ref1 ? ++_j : --_j) {
-          callback(col, row);
+          if (cellCallback) {
+            cellCallback(col, row, this.getSquareAt(col, row));
+          }
         }
       }
+    };
+
+    Grid.prototype.clearGrid = function() {
+      var _this = this;
+
+      return this.runForGrid(function(col, row, e) {
+        _this.nullOut(e);
+        return e.destroy();
+      });
     };
 
     Grid.prototype.auditGrid = function() {
       var _this = this;
 
-      return this.runForGrid(function(col, row) {
-        var e;
-
-        e = _this.getSquareAt(col, row);
+      return this.runForGrid(function(col, row, e) {
         if (!e) {
           return;
         }
@@ -236,8 +311,8 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
     Grid.prototype.ensureGrid = function() {
       var _this = this;
 
-      return this.runForGrid(function(col, row) {
-        if (!_this.getSquareAt(col, row)) {
+      return this.runForGrid(function(col, row, square) {
+        if (!square) {
           return _this.newSquareAt(col, row, false);
         }
       });

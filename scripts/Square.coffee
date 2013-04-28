@@ -49,6 +49,7 @@ define ['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], (g, Craft
 			@endClick()
 
 		Click: (e) ->
+			return if @dead
 			curr = @attr('sqdir')
 			next = if @clickButton then curr - 1 else curr + 1
 			@rebind('TweenEnd', @RotateTweenEnd)

@@ -33,6 +33,17 @@ define(['Crafty', 'components/TweenColor'], function(Crafty, TweenColor) {
         frames = 0;
       }
       return this.tweenColor(this._h_base, frames);
+    },
+    bindHighlightMouseEvents: function() {
+      this.requires('Mouse');
+      this.bind('MouseOver', this.mouseHighlight);
+      return this.bind('MouseOut', this.mouseUnhighlight);
+    },
+    mouseHighlight: function() {
+      return this.highlight(15);
+    },
+    mouseUnhighlight: function() {
+      return this.unhighlight(15);
     }
   });
   return key;
