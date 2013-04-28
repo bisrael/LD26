@@ -12,12 +12,20 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 		return LIMIT + mod if mod < 0
 		return mod
 
+	__DIRSTR__ = ["U","R","D","L"]
+
+	counter = 0
+
+	DIRSTR = (dir) -> __DIRSTR__[TRUDIR(dir)]
+
 	DEG = (dir) -> dir*90
 	NEXT = (dir) -> (dir+1)%(LIMIT)
 	PREV = (dir) -> if dir then dir-1 else LIMIT-1
 
 	Crafty.c key,
 		init: ->
+			counter += 1
+			@squareNum = counter
 			size = 50
 			@requires("2D, Tween, Canvas, Color, Mouse, #{Highlighter}")
 			@attr
@@ -48,7 +56,6 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 		beginClick: (button) ->
 			@clickBegan = yes
 			@clickButton = button
-			console.log 'button', button
 
 		endClick: ->
 			@clickBegan = no
@@ -63,7 +70,10 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 		Click: (e) ->
 			curr = @attr('sqdir')
 			next = if @clickButton then curr - 1 else curr + 1
+			if curr is undefined or next is undefined then debugger
 			@attr('sqdir', next)
+
+			console.log "(#{@gridX}, #{@gridY}) #{DIRSTR(curr)}(#{curr}) -> #{DIRSTR(next)}(#{next})"
 
 			@unbind('TweenEnd', @RotateTweenEnd)
 			@bind('TweenEnd', @RotateTweenEnd)

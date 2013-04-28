@@ -1,10 +1,10 @@
 define ['Crafty', 'Square'], (Crafty, Square) ->
 
-	OFFSET = 100
+	OFFSET = 5
 	GUTTER = 10
 	SQSIZE = 50
-	COLS = 5
-	ROWS = 5
+	COLS = 8
+	ROWS = 10
 
 	UP = 0
 	RIGHT = 1
@@ -21,7 +21,9 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 		return LIMIT + mod if mod < 0
 		return mod
 
-	DIRSTR = (dir) -> __DIRSTR__[dir%LIMIT]
+	DIRSTR = (dir) -> __DIRSTR__[TRUDIR(dir)]
+
+	BOUND = (n, min, max) -> Math.min(Math.max(n, min), max)
 
 	END = (dn, n, low, high) ->
 		return n unless dn
@@ -43,8 +45,6 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 
 		newSquareAt: (x, y, preventMatching) ->
 			e = Crafty.e(Square).shift(GRIDLOC(x), GRIDLOC(y))
-			e.gridX = x
-			e.gridY = y
 			@setSquareAt(x,y,e)
 
 			e.randomizeDirection()
@@ -57,7 +57,14 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 			e.bind('MoveEnd', @checkConditions)
 			e.bind('ExplodeEnd', @removeAndReplace)
 
-		setSquareAt: (x, y, e) -> @_grid[x][y] = e
+		setSquareAt: (x, y, e) ->
+#			if e? and @_grid[x][y]?
+#				console.log "(#{x},#{y}) was #{@_grid[x][y]} -> #{e}"
+			@_grid[x][y] = e
+			if e
+				e.gridX = x
+				e.gridY = y
+
 		getSquareAt: (x, y) -> @_grid[x]?[y]
 
 		matching: (e) ->
@@ -74,6 +81,7 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 
 			toCheck = @getSquareAt(gridX, gridY)
 			return unless toCheck?
+			return if toCheck.hasExploded()
 			checkDir = toCheck.getDirection()
 
 			matching = switch dir
@@ -101,10 +109,10 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 
 		detonate: (e) ->
 			e.explode()
-			@nullOut(e)
+#			@nullOut(e)
 
 		checkConditions: (e) =>
-			@printGridState()
+#			@printGridState()
 			return if e.hasExploded()
 			toCheck = @matching(e)
 			if toCheck?
@@ -113,6 +121,7 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 
 		removeAndReplace: (e) =>
 			{gridX, gridY} = e
+			@nullOut(e)
 			e.destroy()
 			switch e.getDirection()
 				when UP then @shiftStartingAt(gridX, gridY, 0, -1)
@@ -122,20 +131,40 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 
 			return
 
+		runForGrid: (callback) ->
+			for col in [0..(COLS-1)]
+				for row in [0..(ROWS-1)]
+					callback(col, row)
+			return
+
+		auditGrid: -> @runForGrid (col,row) =>
+			e = @getSquareAt(col,row)
+			return unless e
+			if GRIDLOC(e.gridX) isnt e.x then console.log 'X Failed for'
+
+		ensureGrid: -> @runForGrid (col, row) =>
+			@newSquareAt(col, row, no) unless @getSquareAt(col, row)
+
 		shiftStartingAt: (x, y, dx, dy) ->
-			for col in [(x-dx)..END(-dx, x, -1, COLS)]
-				for row in [(y-dy)..END(-dy, y, -1, ROWS)]
+			startX = x - dx
+			endX = END(-dx, startX, 0, COLS-1)
+			startY = y - dy
+			endY = END(-dy, startY, 0, ROWS-1)
+			for col in [startX..endX]
+				for row in [startY..endY]
 					sq = @getSquareAt(col, row)
 					if sq? then @moveWithinGrid(sq, dx, dy)
-					else @newSquareAt(col+dx, row+dy)
+#					else @newSquareAt(col+dx, row+dy)
+			@ensureGrid()
 			return
 
 		moveWithinGrid: (e, dx, dy) ->
 			return unless e? and not e.hasExploded()
-			@setSquareAt(e.gridX,e.gridY,null)
-			e.gridX += dx
-			e.gridY += dy
-			@setSquareAt(e.gridX,e.gridY,e)
-			e.moveTo(GRIDLOC(e.gridX), GRIDLOC(e.gridY))
+			newX = e.gridX + dx
+			newY = e.gridY + dy
+			unless @getSquareAt(newX, newY)
+				@nullOut(e)
+				@setSquareAt(newX, newY, e)
+				e.moveTo(GRIDLOC(newX), GRIDLOC(newY))
 
 	return Grid
