@@ -15,6 +15,9 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			@_e = Crafty.e('2D, Tween, Canvas') unless @_e
 			@_e.attr({x:0,y:0})
 
+		bind: -> @_e.bind.apply(@_e, arguments)
+		unbind: -> @_e.unbind.apply(@_e, arguments)
+
 		destroy: ->
 			@_grid = null
 			@_e.destroy()
@@ -133,11 +136,12 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			return yes
 
 		removeBlankRow: (row) ->
-			for col in [0..@_colMax]
-				unless row is @_rowMax
-					for lrow in [row..@_rowMax-1]
-						@_setSquareAt(col, lrow, @getSquareAt(col, lrow+1))
-				@_grid[col].pop()
+			if @_cols
+				for col in [0..@_colMax]
+					unless row is @_rowMax
+						for lrow in [row..@_rowMax-1]
+							@_setSquareAt(col, lrow, @getSquareAt(col, lrow+1))
+					@_grid[col].pop()
 			@_rows -= 1
 			@_rowMax -= 1
 			return
@@ -145,8 +149,9 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 		removeBlankCol: (col) ->
 			unless col is @_colMax
 				for lcol in [col..@_colMax-1]
-					for row in [0..@_rowMax]
-						@_setSquareAt(lcol, row, @getSquareAt(lcol+1, row))
+					if @_rows
+						for row in [0..@_rowMax]
+							@_setSquareAt(lcol, row, @getSquareAt(lcol+1, row))
 			@_grid.pop()
 			@_cols -= 1
 			@_colMax -= 1
@@ -176,6 +181,15 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 				ret = @checkAndRemoveColIfBlank(col) or ret
 			return ret
 
+		removeBlanks: (e) ->
+			if g.isHorizontal(e.getDirection())
+				rowRemoved = @checkAndRemoveRowIfBlank(e.gridY)
+				colRemoved = @checkAndRemoveColIfBlank(e.gridX)
+			else
+				colRemoved = @checkAndRemoveColIfBlank(e.gridX)
+				rowRemoved = @checkAndRemoveRowIfBlank(e.gridY)
+			return colRemoved or rowRemoved
+
 		printGridState: ->
 			for row in [0..@_rowMax]
 				str = ''
@@ -191,6 +205,10 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 		detonate: (e) ->
 			e.explode()
 
+		checkVictory: ->
+			if @_grid.length is 0 or (@_cols is 0 and @_rows is 0)
+				@_e.trigger('Victory', @)
+
 		checkConditions: (e) =>
 			return if e.hasExploded()
 			toCheck = @matching(e)
@@ -200,6 +218,7 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 
 		repositionAll: (animate) ->
 			@runForGrid (col, row, square) =>
+				return unless square
 				square.setGridLocation(col, row, animate)
 
 		removeSquare: (e) =>
@@ -211,6 +230,12 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			dir = e.getDirection()
 
 			@removeSquare(e)
+
+			if @removeBlanks(e)
+				@repositionAll(yes)
+				@recenter()
+				@checkVictory()
+				return
 
 			switch dir
 				when g.up then @shiftStartingAt(gridX, gridY, 0, -1)

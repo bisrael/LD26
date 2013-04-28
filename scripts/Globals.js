@@ -5,6 +5,7 @@ define(function() {
   ret = {
     gutter: 10,
     sqsize: 50,
+    blank: -1,
     up: 0,
     u: 0,
     right: 1,
@@ -60,6 +61,14 @@ define(function() {
         return dir - 1;
       } else {
         return ret.limit - 1;
+      }
+    },
+    levelData: {
+      2: {
+        data: [[2, -1, 0], [2, 2, -1], [2, -1, 0]],
+        gold: 1,
+        silver: 2,
+        bronze: 3
       }
     }
   };

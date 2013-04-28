@@ -29,6 +29,14 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
       });
     };
 
+    Grid.prototype.bind = function() {
+      return this._e.bind.apply(this._e, arguments);
+    };
+
+    Grid.prototype.unbind = function() {
+      return this._e.unbind.apply(this._e, arguments);
+    };
+
     Grid.prototype.destroy = function() {
       this._grid = null;
       return this._e.destroy();
@@ -242,13 +250,15 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
     Grid.prototype.removeBlankRow = function(row) {
       var col, lrow, _i, _j, _ref, _ref1;
 
-      for (col = _i = 0, _ref = this._colMax; 0 <= _ref ? _i <= _ref : _i >= _ref; col = 0 <= _ref ? ++_i : --_i) {
-        if (row !== this._rowMax) {
-          for (lrow = _j = row, _ref1 = this._rowMax - 1; row <= _ref1 ? _j <= _ref1 : _j >= _ref1; lrow = row <= _ref1 ? ++_j : --_j) {
-            this._setSquareAt(col, lrow, this.getSquareAt(col, lrow + 1));
+      if (this._cols) {
+        for (col = _i = 0, _ref = this._colMax; 0 <= _ref ? _i <= _ref : _i >= _ref; col = 0 <= _ref ? ++_i : --_i) {
+          if (row !== this._rowMax) {
+            for (lrow = _j = row, _ref1 = this._rowMax - 1; row <= _ref1 ? _j <= _ref1 : _j >= _ref1; lrow = row <= _ref1 ? ++_j : --_j) {
+              this._setSquareAt(col, lrow, this.getSquareAt(col, lrow + 1));
+            }
           }
+          this._grid[col].pop();
         }
-        this._grid[col].pop();
       }
       this._rows -= 1;
       this._rowMax -= 1;
@@ -259,8 +269,10 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
 
       if (col !== this._colMax) {
         for (lcol = _i = col, _ref = this._colMax - 1; col <= _ref ? _i <= _ref : _i >= _ref; lcol = col <= _ref ? ++_i : --_i) {
-          for (row = _j = 0, _ref1 = this._rowMax; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; row = 0 <= _ref1 ? ++_j : --_j) {
-            this._setSquareAt(lcol, row, this.getSquareAt(lcol + 1, row));
+          if (this._rows) {
+            for (row = _j = 0, _ref1 = this._rowMax; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; row = 0 <= _ref1 ? ++_j : --_j) {
+              this._setSquareAt(lcol, row, this.getSquareAt(lcol + 1, row));
+            }
           }
         }
       }
@@ -305,6 +317,19 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
       return ret;
     };
 
+    Grid.prototype.removeBlanks = function(e) {
+      var colRemoved, rowRemoved;
+
+      if (g.isHorizontal(e.getDirection())) {
+        rowRemoved = this.checkAndRemoveRowIfBlank(e.gridY);
+        colRemoved = this.checkAndRemoveColIfBlank(e.gridX);
+      } else {
+        colRemoved = this.checkAndRemoveColIfBlank(e.gridX);
+        rowRemoved = this.checkAndRemoveRowIfBlank(e.gridY);
+      }
+      return colRemoved || rowRemoved;
+    };
+
     Grid.prototype.printGridState = function() {
       var col, row, sq, str, _i, _j, _ref, _ref1;
 
@@ -331,6 +356,12 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
       return e.explode();
     };
 
+    Grid.prototype.checkVictory = function() {
+      if (this._grid.length === 0 || (this._cols === 0 && this._rows === 0)) {
+        return this._e.trigger('Victory', this);
+      }
+    };
+
     Grid.prototype.checkConditions = function(e) {
       var toCheck;
 
@@ -348,6 +379,9 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
       var _this = this;
 
       return this.runForGrid(function(col, row, square) {
+        if (!square) {
+          return;
+        }
         return square.setGridLocation(col, row, animate);
       });
     };
@@ -363,6 +397,12 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
       gridX = e.gridX, gridY = e.gridY;
       dir = e.getDirection();
       this.removeSquare(e);
+      if (this.removeBlanks(e)) {
+        this.repositionAll(true);
+        this.recenter();
+        this.checkVictory();
+        return;
+      }
       switch (dir) {
         case g.up:
           this.shiftStartingAt(gridX, gridY, 0, -1);

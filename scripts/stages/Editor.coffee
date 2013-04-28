@@ -23,11 +23,13 @@ define ['Globals',
 			@_state[col] = []
 
 		_stateCell: (col, row, e) =>
-			@_state[col][row] = if e then e.getDirection() else g.blank
+			dir = if e then e.getDirection() else g.blank
+			@_state[col][row] = dir
 
 		saveState: =>
 			@_state = []
 			@runForGrid(@_stateCell, @_stateCol)
+			@printState()
 
 		getState: -> JSON.stringify(@_state)
 

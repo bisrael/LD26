@@ -45,12 +45,16 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter'], f
     };
 
     EditorGrid.prototype._stateCell = function(col, row, e) {
-      return this._state[col][row] = e ? e.getDirection() : g.blank;
+      var dir;
+
+      dir = e ? e.getDirection() : g.blank;
+      return this._state[col][row] = dir;
     };
 
     EditorGrid.prototype.saveState = function() {
       this._state = [];
-      return this.runForGrid(this._stateCell, this._stateCol);
+      this.runForGrid(this._stateCell, this._stateCol);
+      return this.printState();
     };
 
     EditorGrid.prototype.getState = function() {
