@@ -64,7 +64,19 @@ define(function() {
       }
     },
     levelData: {
+      1: {
+        data: [[0], [3]],
+        gold: 1,
+        silver: 1,
+        bronze: 1
+      },
       2: {
+        data: [[1], [0], [3], [3]],
+        gold: 1,
+        silver: 3,
+        bronze: 10
+      },
+      3: {
         data: [[2, -1, 0], [2, 2, -1], [2, -1, 0]],
         gold: 1,
         silver: 2,

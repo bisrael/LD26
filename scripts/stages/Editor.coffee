@@ -13,7 +13,7 @@ define ['Globals',
 
 	class EditorGrid extends Grid
 		constructor: ->
-			super(blankGrid(3,3))
+			super(blankGrid(4,1))
 
 			@showEditorControls()
 			@saveState()

@@ -39,7 +39,10 @@
                 waitSeconds: 30,
                 deps: ["Game"],
                 callback: function(Game) {
-                    $(Game.start);
+                    $(function() {
+                        var game = new Game();
+                        game.startPlay();
+                    });
                 }
             };
         </script>

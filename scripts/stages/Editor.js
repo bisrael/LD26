@@ -34,7 +34,7 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter'], f
       this.printState = __bind(this.printState, this);
       this.saveState = __bind(this.saveState, this);
       this._stateCell = __bind(this._stateCell, this);
-      this._stateCol = __bind(this._stateCol, this);      EditorGrid.__super__.constructor.call(this, blankGrid(3, 3));
+      this._stateCol = __bind(this._stateCol, this);      EditorGrid.__super__.constructor.call(this, blankGrid(4, 1));
       this.showEditorControls();
       this.saveState();
       this.printState();
