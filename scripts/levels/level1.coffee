@@ -1,0 +1,4 @@
+define ['Globals'], (g) ->
+	return [
+		[]
+	]

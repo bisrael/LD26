@@ -1,8 +1,8 @@
-define ['Crafty', 'Grid'], (Crafty, Grid) ->
+define ['Crafty', 'Grid', 'stages/Editor'], (Crafty, Grid, Editor) ->
 	Game =
 		start: ->
 			Crafty.init(480, 640)
 			Crafty.background('white')
-			new Grid()
+			Crafty.scene(Editor)
 
 	return Game

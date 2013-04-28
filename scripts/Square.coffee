@@ -1,36 +1,13 @@
-define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter, Scheme) ->
+define ['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], (g, Crafty, Highlighter, Scheme) ->
 	key = 'Square'
-
-	UP = 0
-	RIGHT = 1
-	DOWN = 2
-	LEFT = 3
-	LIMIT = 4
-
-	TRUDIR = (dir) ->
-		mod = dir%LIMIT
-		return LIMIT + mod if mod < 0
-		return mod
-
-	__DIRSTR__ = ["U","R","D","L"]
-
-	counter = 0
-
-	DIRSTR = (dir) -> __DIRSTR__[TRUDIR(dir)]
-
-	DEG = (dir) -> dir*90
-	NEXT = (dir) -> (dir+1)%(LIMIT)
-	PREV = (dir) -> if dir then dir-1 else LIMIT-1
 
 	Crafty.c key,
 		init: ->
-			counter += 1
-			@squareNum = counter
+			@dead = no
 			size = 50
 			@requires("2D, Tween, Canvas, Color, Mouse, #{Highlighter}")
-			@attr
-				w: size
-				h: size
+			@w = size
+			@h = size
 			@baseColor(Scheme.primary[0])
 			@highColor(Scheme.primary[4])
 
@@ -45,10 +22,14 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 
 			@attach(@arrow)
 
-			@bind('MouseOver', @MouseOver)
-			@bind('MouseOut', @MouseOut)
-			@bind('MouseDown', @MouseDown)
-			@bind('MouseUp', @MouseUp)
+			@rebind('MouseOver')
+			@rebind('MouseOut')
+			@rebind('MouseDown')
+			@rebind('MouseUp')
+
+		rebind: (event, callback) ->
+			@unbind(event, callback or @[event])
+			@bind(event, callback or @[event])
 
 		MouseOver: -> @highlight(15)
 		MouseOut: -> @unhighlight(15)
@@ -70,24 +51,20 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 		Click: (e) ->
 			curr = @attr('sqdir')
 			next = if @clickButton then curr - 1 else curr + 1
-			if curr is undefined or next is undefined then debugger
-			@attr('sqdir', next)
+			@rebind('TweenEnd', @RotateTweenEnd)
+			@setDirection(next, yes) # yes = animated
 
-			console.log "(#{@gridX}, #{@gridY}) #{DIRSTR(curr)}(#{curr}) -> #{DIRSTR(next)}(#{next})"
-
-			@unbind('TweenEnd', @RotateTweenEnd)
-			@bind('TweenEnd', @RotateTweenEnd)
-			@tween({
-				rotation: DEG(next)
-			}, 15)
+		setGridLocation: (x, y, animated) ->
+			dx = g.gridloc(x - (@gridX or 0))
+			dy = g.gridloc(y - (@gridY or 0))
+			@gridX = x
+			@gridY = y
+			if animated then @moveTo(@x + dx, @y + dy)
+			else @shift(dx, dy)
 
 		moveTo: (x,y) ->
-			@unbind('TweenEnd', @MoveTweenEnd)
-			@bind('TweenEnd', @MoveTweenEnd)
-			@tween({
-				x: x,
-				y: y
-			}, 15)
+			@rebind('TweenEnd', @MoveTweenEnd)
+			@tween({ x: x, y: y	}, 15)
 
 		MoveTweenEnd: (e) ->
 			@unbind('TweenEnd', @MoveTweenEnd)
@@ -97,18 +74,19 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 			@unbind('TweenEnd', @RotateTweenEnd)
 			@trigger('RotateEnd', @)
 
-		randomizeDirection: ->
-			dir = ~~(Math.random() * (LIMIT));
-			@attr('sqdir', dir)
-			@rotation = dir*90;
+		randomizeDirection: -> @setDirection(g.randomDir())
 
-		getDirection: -> TRUDIR(@attr('sqdir'))
+		getDirection: -> g.truedir(@attr('sqdir'))
+
+		setDirection: (dir, animated) ->
+			@attr('sqdir', dir)
+			if animated then @tween({ rotation: g.deg(dir) }, 15)
+			else @rotation = g.deg(dir);
 
 		justInserted: ->
 			@attr('alpha', 0)
-			@unbind('TweenEnd', @InsertTweenEnd)
-			@bind('TweenEnd', @InsertTweenEnd)
-			@tween({alpha: 1}, 15)
+			@rebind('TweenEnd', @InsertTweenEnd)
+			@tween({ alpha: 1 }, 15)
 
 		InsertTweenEnd: ->
 			@unbind('TweenEnd', @InsertTweenEnd)
@@ -116,12 +94,9 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 
 		explode: ->
 			@dead = yes
-			@unbind('TweenEnd', @ExplodeTweenEnd)
-			@bind('TweenEnd', @ExplodeTweenEnd)
-			@tween({
-				alpha: 0
-			}, 15)
-			@arrow.tween({alpha: 0}, 15)
+			@rebind('TweenEnd', @ExplodeTweenEnd)
+			@tween({ alpha: 0	}, 15)
+			@arrow.tween({ alpha: 0 }, 15)
 
 		hasExploded: -> !!@dead
 
