@@ -7,6 +7,11 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 	LEFT = 3
 	LIMIT = 4
 
+	TRUDIR = (dir) ->
+		mod = dir%LIMIT
+		return LIMIT + mod if mod < 0
+		return mod
+
 	DEG = (dir) -> dir*90
 	NEXT = (dir) -> (dir+1)%(LIMIT)
 	PREV = (dir) -> if dir then dir-1 else LIMIT-1
@@ -87,9 +92,7 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 			@attr('sqdir', dir)
 			@rotation = dir*90;
 
-		getDirection: ->
-			dir = @attr('sqdir')
-			if dir < 0 then LIMIT - (dir%LIMIT) else (dir%LIMIT)
+		getDirection: -> TRUDIR(@attr('sqdir'))
 
 		justInserted: ->
 			@attr('alpha', 0)
@@ -102,6 +105,7 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 			@trigger('InsertEnd', @)
 
 		explode: ->
+			@dead = yes
 			@unbind('TweenEnd', @ExplodeTweenEnd)
 			@bind('TweenEnd', @ExplodeTweenEnd)
 			@tween({
@@ -113,7 +117,6 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 
 		ExplodeTweenEnd: ->
 			@unbind('TweenEnd', @ExplodeTweenEnd)
-			@dead = yes
 			@trigger('ExplodeEnd', @)
 
 

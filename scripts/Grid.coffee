@@ -16,6 +16,11 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 
 	HORIZ = (dir) -> !!(dir%2)
 
+	TRUDIR = (dir) ->
+		mod = dir%LIMIT
+		return LIMIT + mod if mod < 0
+		return mod
+
 	DIRSTR = (dir) -> __DIRSTR__[dir%LIMIT]
 
 	END = (dn, n, low, high) ->
@@ -85,9 +90,15 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 				str = ''
 				for col in [0..(COLS-1)]
 					sq = @getSquareAt(col,row)
-					str += DIRSTR(if sq? then sq.getDirection() else "_")
+					if sq?
+						if sq.hasExploded() then str += "*"
+						else str += DIRSTR(sq.getDirection())
+					else str += "_"
 				console.log str
 			console.log('~~~~~')
+
+		nullOut: (e) ->
+			@setSquareAt(e.gridX, e.gridY, null)
 
 		checkConditions: (e) =>
 			@printGridState()
@@ -95,6 +106,8 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 			if toCheck?
 				e.explode()
 				toCheck.explode()
+				@nullOut(e)
+				@nullOut(toCheck)
 
 		removeAndReplace: (e) =>
 			{gridX, gridY} = e

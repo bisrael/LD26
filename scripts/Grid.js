@@ -2,7 +2,7 @@
 var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
 define(['Crafty', 'Square'], function(Crafty, Square) {
-  var COLS, COL_END, DIRSTR, DOWN, END, GRIDLOC, GUTTER, Grid, HORIZ, LEFT, LIMIT, OFFSET, RIGHT, ROWS, ROW_END, SQSIZE, UP, __DIRSTR__;
+  var COLS, COL_END, DIRSTR, DOWN, END, GRIDLOC, GUTTER, Grid, HORIZ, LEFT, LIMIT, OFFSET, RIGHT, ROWS, ROW_END, SQSIZE, TRUDIR, UP, __DIRSTR__;
 
   OFFSET = 100;
   GUTTER = 10;
@@ -17,6 +17,15 @@ define(['Crafty', 'Square'], function(Crafty, Square) {
   __DIRSTR__ = ["U", "R", "D", "L"];
   HORIZ = function(dir) {
     return !!(dir % 2);
+  };
+  TRUDIR = function(dir) {
+    var mod;
+
+    mod = dir % LIMIT;
+    if (mod < 0) {
+      return LIMIT + mod;
+    }
+    return mod;
   };
   DIRSTR = function(dir) {
     return __DIRSTR__[dir % LIMIT];
@@ -133,11 +142,23 @@ define(['Crafty', 'Square'], function(Crafty, Square) {
         str = '';
         for (col = _j = 0, _ref1 = COLS - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; col = 0 <= _ref1 ? ++_j : --_j) {
           sq = this.getSquareAt(col, row);
-          str += DIRSTR(sq != null ? sq.getDirection() : "_");
+          if (sq != null) {
+            if (sq.hasExploded()) {
+              str += "*";
+            } else {
+              str += DIRSTR(sq.getDirection());
+            }
+          } else {
+            str += "_";
+          }
         }
         console.log(str);
       }
       return console.log('~~~~~');
+    };
+
+    Grid.prototype.nullOut = function(e) {
+      return this.setSquareAt(e.gridX, e.gridY, null);
     };
 
     Grid.prototype.checkConditions = function(e) {
@@ -147,7 +168,9 @@ define(['Crafty', 'Square'], function(Crafty, Square) {
       toCheck = this.matching(e);
       if (toCheck != null) {
         e.explode();
-        return toCheck.explode();
+        toCheck.explode();
+        this.nullOut(e);
+        return this.nullOut(toCheck);
       }
     };
 
