@@ -13,11 +13,13 @@ define ['Globals',
 
 	class EditorGrid extends Grid
 		constructor: ->
-			super(blankGrid(4,1))
+			super(blankGrid(4,4))
 
 			@showEditorControls()
 			@saveState()
 			@printState()
+
+		blank: (w,h) -> @newLevel(blankGrid(w,h))
 
 		_stateCol: (col) =>
 			@_state[col] = []

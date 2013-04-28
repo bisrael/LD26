@@ -8770,11 +8770,13 @@ Crafty.extend({
 */
 Crafty.c("Text", {
 	_text: "",
+    _textColor: "rgb(0,0,0)",
 	_textFont: {
-		"type": "",
-		"weight": "",
-		"size": "",
-		"family": ""
+		"type": "normal",
+		"weight": "normal",
+		"size": "10pt",
+        "lineHeight": "1",
+		"family": "sans-serif"
 	},
 	ready: true,
 
@@ -8783,8 +8785,9 @@ Crafty.c("Text", {
 
 		this.bind("Draw", function (e) {
 			var font = this._textFont["type"] + ' ' + this._textFont["weight"] + ' ' +
-				this._textFont["size"] + ' ' + this._textFont["family"];
+				this._textFont["size"] + ' / ' + this._textFont['lineHeight'] + ' ' + this._textFont["family"];
 
+            console.log('')
 			if (e.type === "DOM") {
 				var el = this._element,
 					style = el.style;
@@ -8798,7 +8801,7 @@ Crafty.c("Text", {
 
 				context.save();
 
-				context.fillStyle = this._textColor || "rgb(0,0,0)";
+				context.fillStyle = this._textColor;
 				context.font = font;
 
 				context.translate(this.x, this.y + this.h);

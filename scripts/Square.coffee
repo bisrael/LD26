@@ -64,7 +64,7 @@ define ['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], (g, Craft
 			else @shift(dx, dy)
 
 		moveTo: (x,y) ->
-			if @moving then @cancelTweens()
+#			if @moving then @cancelTweens()
 			@moving = yes
 			@rebind('TweenEnd', @MoveTweenEnd)
 			@tween({ x: x, y: y	}, g.dur)
@@ -98,6 +98,8 @@ define ['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], (g, Craft
 
 		explode: ->
 			@dead = yes
+#			@cancelTweens()
+#			@unbind('TweenEnd')
 			@rebind('TweenEnd', @ExplodeTweenEnd)
 			@tween({ alpha: 0	}, g.dur)
 			@arrow.tween({ alpha: 0 }, g.dur)
