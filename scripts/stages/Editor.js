@@ -33,7 +33,7 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter'], f
       this.printState = __bind(this.printState, this);
       this.saveState = __bind(this.saveState, this);
       this._stateCell = __bind(this._stateCell, this);
-      this._stateCol = __bind(this._stateCol, this);      EditorGrid.__super__.constructor.call(this, blankGrid(4, 4));
+      this._stateCol = __bind(this._stateCol, this);      EditorGrid.__super__.constructor.call(this, blankGrid(6, 6));
       this.showEditorControls();
       this.saveState();
       this.printState();
@@ -61,7 +61,20 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter'], f
     };
 
     EditorGrid.prototype.resetState = function() {
-      return this.newLevel(this._state);
+      return this.newLevel(this._state, true);
+    };
+
+    EditorGrid.prototype.bindEvents = function(e, method) {
+      if (e == null) {
+        return;
+      }
+      EditorGrid.__super__.bindEvents.apply(this, arguments);
+      if (method === 'bind') {
+        method = 'unbind';
+      } else {
+        method = 'bind';
+      }
+      return e[method]('MiddleClick', this.removeSquare);
     };
 
     EditorGrid.prototype.pauseEvents = function() {

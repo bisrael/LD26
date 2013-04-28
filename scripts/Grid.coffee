@@ -2,11 +2,16 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 
 	class Grid
 		constructor: (levelData) ->
-			@_e = Crafty.e('2D, Canvas')
+			@_e = Crafty.e('2D, Tween, Canvas')
+			@_e.attr({x:0,y:0})
 
-			@setLevelData(levelData)
+			@newLevel(levelData, no)
+
+		newLevel: (data, animate) ->
+			@clearGrid()
+			@setLevelData(data)
 			@establishGrid()
-			@center()
+			@center(animate)
 
 		destroy: ->
 			@_grid = null
@@ -16,18 +21,14 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			@_levelData = data
 			@_cols = data.length
 			@_colMax = @_cols - 1
-			@_rows = 1
-			@_rowMax = 0
+
+			for col in [0..@_colMax]
+				@_rows = Math.max(@_rows or 0, data[col].length)
+			@_rowMax = @_rows - 1
 			@offsetX = 0
 			@offsetY = 0
 
 		isEstablished: -> !!@_grid
-
-		newLevel: (data) ->
-			@clearGrid()
-			@setLevelData(data)
-			@establishGrid()
-			@center()
 
 		establishGrid: ->
 			@_grid = []
@@ -75,11 +76,18 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 
 		center: (animate) ->
 			{viewport} = Crafty
+
 			size = Math.min(viewport.width, viewport.height)
+
 			@offsetX = (size - @getWidth()) / 2
+			dx = @offsetX - @_e.x
+
 			@offsetY = (size - @getHeight()) / 2
-			if animate then @_e.tween({x: @offsetX, y: @offsetY})
-			else @_e.shift(@offsetX - @_e.x, @offsetY - @_e.y)
+			dy = @offsetY - @_e.y
+
+			return unless dx or dy
+			if animate then @_e.tween({x: @offsetX, y: @offsetY}, g.dur)
+			else @_e.shift(dx, dy)
 
 		recenter: -> @center(yes)
 
@@ -120,6 +128,15 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 
 		removeBlankCol: (col) ->
 
+
+		removeBlankRows: ->
+			removeBlankRow(row) for row in [0..@_rowMax]
+			return
+
+		removeBlankCols: ->
+			removeBlankCol(col) for col in [0..@_colMax]
+			return
+
 		printGridState: ->
 			for row in [0..@_rowMax]
 				str = ''
@@ -142,11 +159,17 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 				@detonate(e)
 				@detonate(toCheck)
 
-		removeAndReplace: (e) =>
-			{gridX, gridY} = e
+		removeSquare: (e) =>
 			@nullOut(e)
 			e.destroy()
-			switch e.getDirection()
+
+		removeAndReplace: (e) =>
+			{gridX, gridY} = e
+			dir = e.getDirection()
+
+			@removeSquare(e)
+
+			switch dir
 				when g.up then @shiftStartingAt(gridX, gridY, 0, -1)
 				when g.down then @shiftStartingAt(gridX, gridY, 0, 1)
 				when g.left then @shiftStartingAt(gridX, gridY, -1, 0)

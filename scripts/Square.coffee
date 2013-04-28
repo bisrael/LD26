@@ -65,7 +65,7 @@ define ['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], (g, Craft
 
 		moveTo: (x,y) ->
 			@rebind('TweenEnd', @MoveTweenEnd)
-			@tween({ x: x, y: y	}, 15)
+			@tween({ x: x, y: y	}, g.dur)
 
 		MoveTweenEnd: (e) ->
 			@unbind('TweenEnd', @MoveTweenEnd)
@@ -81,13 +81,13 @@ define ['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], (g, Craft
 
 		setDirection: (dir, animated) ->
 			@attr('sqdir', dir)
-			if animated then @tween({ rotation: g.deg(dir) }, 15)
+			if animated then @tween({ rotation: g.deg(dir) }, g.dur)
 			else @rotation = g.deg(dir);
 
 		justInserted: ->
 			@attr('alpha', 0)
 			@rebind('TweenEnd', @InsertTweenEnd)
-			@tween({ alpha: 1 }, 15)
+			@tween({ alpha: 1 }, g.dur)
 
 		InsertTweenEnd: ->
 			@unbind('TweenEnd', @InsertTweenEnd)
@@ -96,8 +96,8 @@ define ['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], (g, Craft
 		explode: ->
 			@dead = yes
 			@rebind('TweenEnd', @ExplodeTweenEnd)
-			@tween({ alpha: 0	}, 15)
-			@arrow.tween({ alpha: 0 }, 15)
+			@tween({ alpha: 0	}, g.dur)
+			@arrow.tween({ alpha: 0 }, g.dur)
 
 		hasExploded: -> !!@dead
 

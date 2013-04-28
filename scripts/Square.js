@@ -87,7 +87,7 @@ define(['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], function(
       return this.tween({
         x: x,
         y: y
-      }, 15);
+      }, g.dur);
     },
     MoveTweenEnd: function(e) {
       this.unbind('TweenEnd', this.MoveTweenEnd);
@@ -108,7 +108,7 @@ define(['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], function(
       if (animated) {
         return this.tween({
           rotation: g.deg(dir)
-        }, 15);
+        }, g.dur);
       } else {
         return this.rotation = g.deg(dir);
       }
@@ -118,7 +118,7 @@ define(['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], function(
       this.rebind('TweenEnd', this.InsertTweenEnd);
       return this.tween({
         alpha: 1
-      }, 15);
+      }, g.dur);
     },
     InsertTweenEnd: function() {
       this.unbind('TweenEnd', this.InsertTweenEnd);
@@ -129,10 +129,10 @@ define(['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], function(
       this.rebind('TweenEnd', this.ExplodeTweenEnd);
       this.tween({
         alpha: 0
-      }, 15);
+      }, g.dur);
       return this.arrow.tween({
         alpha: 0
-      }, 15);
+      }, g.dur);
     },
     hasExploded: function() {
       return !!this.dead;

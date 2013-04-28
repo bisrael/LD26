@@ -14,6 +14,7 @@ define(function() {
     left: 3,
     l: 3,
     limit: 4,
+    dur: 15,
     randomDir: function() {
       return ~~(Math.random() * g.limit);
     },

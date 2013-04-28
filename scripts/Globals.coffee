@@ -11,6 +11,7 @@ define ->
 		left: 3
 		l: 3
 		limit: 4
+		dur: 15
 		randomDir: -> ~~(Math.random() * (g.limit))
 		_dirstrs: ["U","R","D","L"]
 		isHorizontal: (dir) -> !!(dir%2)
