@@ -75,6 +75,7 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 			}, 15)
 
 		MoveTweenEnd: (e) ->
+			@unbind('TweenEnd', @MoveTweenEnd)
 			console.log 'Move End' , e
 
 		RotateTweenEnd: (e) ->
@@ -98,7 +99,12 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 			}, 15)
 			@arrow.tween({alpha: 0}, 15)
 
+		hasExploded: -> !!@dead
+
 		ExplodeTweenEnd: ->
+			@unbind('TweenEnd', @ExplodeTweenEnd)
+			@dead = yes
+			@trigger('ExplodeEnd', @)
 
 
 	return key

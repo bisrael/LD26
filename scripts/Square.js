@@ -93,6 +93,7 @@ define(['Crafty', 'components/Highlighter', 'ColorScheme'], function(Crafty, Hig
       }, 15);
     },
     MoveTweenEnd: function(e) {
+      this.unbind('TweenEnd', this.MoveTweenEnd);
       return console.log('Move End', e);
     },
     RotateTweenEnd: function(e) {
@@ -126,7 +127,14 @@ define(['Crafty', 'components/Highlighter', 'ColorScheme'], function(Crafty, Hig
         alpha: 0
       }, 15);
     },
-    ExplodeTweenEnd: function() {}
+    hasExploded: function() {
+      return !!this.dead;
+    },
+    ExplodeTweenEnd: function() {
+      this.unbind('TweenEnd', this.ExplodeTweenEnd);
+      this.dead = true;
+      return this.trigger('ExplodeEnd', this);
+    }
   });
   return key;
 });

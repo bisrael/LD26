@@ -14,6 +14,14 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 
 	HORIZ = (dir) -> !!(dir%2)
 
+	END = (dn, n, low, high) ->
+		return n unless dn
+		return high if dn > 0
+		return low
+
+	COL_END = (dx, x) -> END(dx, x, 0, COLS)
+	ROW_END = (dy, y) -> END(dy, y, 0, ROWS)
+
 	GRIDLOC = (n) -> n*(SQSIZE+GUTTER) + OFFSET
 
 	class Grid
@@ -34,12 +42,10 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 			if preventMatching
 				while @matching(e) then e.randomizeDirection()
 
-			e.bind('RotateEnd', @checkConditions.bind(@))
+			e.bind('RotateEnd', @checkConditions)
+			e.bind('ExplodeEnd', @removeAndReplace)
 
 		getSquareAt: (x, y) -> @_grid[x]?[y]
-#			if x < 0 or y < 0 or x >= COLS or y >= ROWS
-#			then undefined
-#			else
 
 		matching: (e) ->
 			dir = e.getDirection()
@@ -65,13 +71,33 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 
 			if matching then return toCheck
 
-		checkConditions: (e) ->
+		checkConditions: (e) =>
 			toCheck = @matching(e)
 			if toCheck?
 				e.explode()
 				toCheck.explode()
 
+		removeAndReplace: (e) =>
+			{gridX, gridY} = e
 
+			switch e.getDirection()
+				when UP then @shiftStartingAt(gridX, gridY, 0, -1)
+				when DOWN then @shiftStartingAt(gridX, gridY, 0, 1)
+				when LEFT then @shiftStartingAt(gridX, gridY, -1, 0)
+				when RIGHT then @shiftStartingAt(gridX, gridY, 1, 0)
 
+			return
+
+		shiftStartingAt: (x, y, dx, dy) ->
+			for col in [(x-dx)..COL_END(-dx, x)]
+				for row in [(y-dy)..ROW_END(-dy, y)]
+					@moveWithinGrid(@getSquareAt(col, row), dx, dy)
+			return
+
+		moveWithinGrid: (e, dx, dy) ->
+			return unless e? and not e.hasExploded()
+			e.gridX += dx
+			e.gridY += dy
+			e.moveTo(GRIDLOC(e.gridX), GRIDLOC(e.gridY))
 
 	return Grid
