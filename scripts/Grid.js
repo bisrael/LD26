@@ -137,7 +137,6 @@ define(['Crafty', 'Square'], function(Crafty, Square) {
     Grid.prototype.printGridState = function() {
       var col, row, sq, str, _i, _j, _ref, _ref1;
 
-      console.log('~~~~~');
       for (row = _i = 0, _ref = ROWS - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; row = 0 <= _ref ? ++_i : --_i) {
         str = '';
         for (col = _j = 0, _ref1 = COLS - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; col = 0 <= _ref1 ? ++_j : --_j) {
@@ -154,23 +153,29 @@ define(['Crafty', 'Square'], function(Crafty, Square) {
         }
         console.log(str);
       }
-      return console.log('~~~~~');
+      return console.log(' ');
     };
 
     Grid.prototype.nullOut = function(e) {
       return this.setSquareAt(e.gridX, e.gridY, null);
     };
 
+    Grid.prototype.detonate = function(e) {
+      e.explode();
+      return this.nullOut(e);
+    };
+
     Grid.prototype.checkConditions = function(e) {
       var toCheck;
 
       this.printGridState();
+      if (e.hasExploded()) {
+        return;
+      }
       toCheck = this.matching(e);
       if (toCheck != null) {
-        e.explode();
-        toCheck.explode();
-        this.nullOut(e);
-        return this.nullOut(toCheck);
+        this.detonate(e);
+        return this.detonate(toCheck);
       }
     };
 

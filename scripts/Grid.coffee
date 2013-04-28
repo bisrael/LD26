@@ -85,7 +85,6 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 			if matching then return toCheck
 
 		printGridState: ->
-			console.log('~~~~~')
 			for row in [0..(ROWS-1)]
 				str = ''
 				for col in [0..(COLS-1)]
@@ -95,19 +94,22 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 						else str += DIRSTR(sq.getDirection())
 					else str += "_"
 				console.log str
-			console.log('~~~~~')
+			console.log(' ')
 
 		nullOut: (e) ->
 			@setSquareAt(e.gridX, e.gridY, null)
 
+		detonate: (e) ->
+			e.explode()
+			@nullOut(e)
+
 		checkConditions: (e) =>
 			@printGridState()
+			return if e.hasExploded()
 			toCheck = @matching(e)
 			if toCheck?
-				e.explode()
-				toCheck.explode()
-				@nullOut(e)
-				@nullOut(toCheck)
+				@detonate(e)
+				@detonate(toCheck)
 
 		removeAndReplace: (e) =>
 			{gridX, gridY} = e
