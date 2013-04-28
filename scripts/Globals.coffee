@@ -19,7 +19,7 @@ define ->
 			mod = dir%ret.limit
 			return ret.limit + mod if mod < 0
 			return mod
-		dirstr: (dir) -> ret._dirstrs[ret.trustr(dir)]
+		dirstr: (dir) -> ret._dirstrs[ret.truedir(dir)]
 		bound: (n, min, max) -> Math.min(Math.max(n, min), max)
 		end: (dn, n, low, high) ->
 			return n unless dn

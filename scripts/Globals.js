@@ -32,7 +32,7 @@ define(function() {
       return mod;
     },
     dirstr: function(dir) {
-      return ret._dirstrs[ret.trustr(dir)];
+      return ret._dirstrs[ret.truedir(dir)];
     },
     bound: function(n, min, max) {
       return Math.min(Math.max(n, min), max);

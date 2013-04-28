@@ -64,10 +64,13 @@ define ['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], (g, Craft
 			else @shift(dx, dy)
 
 		moveTo: (x,y) ->
+			if @moving then @cancelTweens()
+			@moving = yes
 			@rebind('TweenEnd', @MoveTweenEnd)
 			@tween({ x: x, y: y	}, g.dur)
 
 		MoveTweenEnd: (e) ->
+			@moving = no
 			@unbind('TweenEnd', @MoveTweenEnd)
 			@trigger('MoveEnd', @)
 

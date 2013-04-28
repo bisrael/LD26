@@ -83,6 +83,10 @@ define(['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], function(
       }
     },
     moveTo: function(x, y) {
+      if (this.moving) {
+        this.cancelTweens();
+      }
+      this.moving = true;
       this.rebind('TweenEnd', this.MoveTweenEnd);
       return this.tween({
         x: x,
@@ -90,6 +94,7 @@ define(['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], function(
       }, g.dur);
     },
     MoveTweenEnd: function(e) {
+      this.moving = false;
       this.unbind('TweenEnd', this.MoveTweenEnd);
       return this.trigger('MoveEnd', this);
     },

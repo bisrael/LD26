@@ -7195,7 +7195,17 @@ Crafty.c("Tween", {
 			}
 		});
 		return this;
-	}
+	},
+    cancelTweens: function() {
+        this.each(function() {
+            if (this._step != null) {
+                this.unbind('EnterFrame', tweenEnterFrame);
+                this._numProps = 0;
+                this._step = null;
+            }
+        });
+        return this;
+    }
 });
 
 function tweenEnterFrame(e) {
@@ -7207,7 +7217,7 @@ function tweenEnterFrame(e) {
 		this[k] += prop.val;
 		if (--prop.rem == 0) {
 			// decimal numbers rounding fix
-			this[k] = prop.prop;
+//			this[k] = prop.prop;
 			this.trigger("TweenEnd", k);
 			// make sure the duration wasn't changed in TweenEnd
 			if (this._step[k].rem <= 0) {

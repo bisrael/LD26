@@ -2,16 +2,18 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 
 	class Grid
 		constructor: (levelData) ->
-			@_e = Crafty.e('2D, Tween, Canvas')
-			@_e.attr({x:0,y:0})
-
 			@newLevel(levelData, no)
 
 		newLevel: (data, animate) ->
+			@resetEntity()
 			@clearGrid()
 			@setLevelData(data)
 			@establishGrid()
 			@center(animate)
+
+		resetEntity: ->
+			@_e = Crafty.e('2D, Tween, Canvas') unless @_e
+			@_e.attr({x:0,y:0})
 
 		destroy: ->
 			@_grid = null
@@ -55,10 +57,14 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			e[method]('MoveEnd', @checkConditions)
 			e[method]('ExplodeEnd', @removeAndReplace)
 
-		setSquareAt: (x, y, e, animate) ->
-			@_grid[x][y] = e
-			return unless e
+		_setSquareAt: (x,y,e) ->
+			@_grid[x]?[y] = e
+			return no unless e
 			@nullOut(e) if e.gridX? and e.gridY?
+			return yes
+
+		setSquareAt: (x, y, e, animate) ->
+			return unless @_setSquareAt(x, y, e)
 			e.setGridLocation(x, y, animate)
 			@_e.attach(e)
 
@@ -115,27 +121,60 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			if matching then return toCheck
 
 		isRowBlank: (row) ->
+			return no if row > @_rowMax or row < 0
 			for col in [0..@_colMax]
 				return no if @getSquareAt(col, row)
 			return yes
 
 		isColBlank: (col) ->
+			return no if col > @_colMax or col < 0
 			for row in [0..@_rowMax]
 				return no if @getSquareAt(col, row)
 			return yes
 
 		removeBlankRow: (row) ->
+			for col in [0..@_colMax]
+				unless row is @_rowMax
+					for lrow in [row..@_rowMax-1]
+						@_setSquareAt(col, lrow, @getSquareAt(col, lrow+1))
+				@_grid[col].pop()
+			@_rows -= 1
+			@_rowMax -= 1
+			return
 
 		removeBlankCol: (col) ->
-
-
-		removeBlankRows: ->
-			removeBlankRow(row) for row in [0..@_rowMax]
+			unless col is @_colMax
+				for lcol in [col..@_colMax-1]
+					for row in [0..@_rowMax]
+						@_setSquareAt(lcol, row, @getSquareAt(lcol+1, row))
+			@_grid.pop()
+			@_cols -= 1
+			@_colMax -= 1
 			return
 
-		removeBlankCols: ->
-			removeBlankCol(col) for col in [0..@_colMax]
-			return
+		checkAndRemoveRowIfBlank: (row) ->
+			if @isRowBlank(row)
+				@removeBlankRow(row)
+				return yes
+			return no
+
+		checkAndRemoveColIfBlank: (col) ->
+			if @isColBlank(col)
+				@removeBlankCol(col)
+				return yes
+			return no
+
+		removeBlankRows: () ->
+			ret = no
+			for row in [0..@_rowMax]
+				ret = @checkAndRemoveRowIfBlank(row) or ret
+			return ret
+
+		removeBlankCols: () ->
+			ret = no
+			for col in [0..@_colMax]
+				ret = @checkAndRemoveColIfBlank(col) or ret
+			return ret
 
 		printGridState: ->
 			for row in [0..@_rowMax]
@@ -158,6 +197,10 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			if toCheck?
 				@detonate(e)
 				@detonate(toCheck)
+
+		repositionAll: (animate) ->
+			@runForGrid (col, row, square) =>
+				square.setGridLocation(col, row, animate)
 
 		removeSquare: (e) =>
 			@nullOut(e)

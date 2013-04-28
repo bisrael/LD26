@@ -29,11 +29,12 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter'], f
     __extends(EditorGrid, _super);
 
     function EditorGrid() {
+      this.editorRemove = __bind(this.editorRemove, this);
       this.resetState = __bind(this.resetState, this);
       this.printState = __bind(this.printState, this);
       this.saveState = __bind(this.saveState, this);
       this._stateCell = __bind(this._stateCell, this);
-      this._stateCol = __bind(this._stateCol, this);      EditorGrid.__super__.constructor.call(this, blankGrid(6, 6));
+      this._stateCol = __bind(this._stateCol, this);      EditorGrid.__super__.constructor.call(this, blankGrid(3, 3));
       this.showEditorControls();
       this.saveState();
       this.printState();
@@ -61,20 +62,30 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter'], f
     };
 
     EditorGrid.prototype.resetState = function() {
-      return this.newLevel(this._state, true);
+      return this.newLevel(this._state, false);
     };
 
     EditorGrid.prototype.bindEvents = function(e, method) {
-      if (e == null) {
+      var opp;
+
+      EditorGrid.__super__.bindEvents.apply(this, arguments);
+      if (!e) {
         return;
       }
-      EditorGrid.__super__.bindEvents.apply(this, arguments);
-      if (method === 'bind') {
-        method = 'unbind';
-      } else {
-        method = 'bind';
+      opp = method === 'bind' ? 'unbind' : 'bind';
+      return e[opp]('MiddleClick', this.editorRemove);
+    };
+
+    EditorGrid.prototype.editorRemove = function(e) {
+      var colRemoved, rowRemoved;
+
+      this.removeSquare(e);
+      colRemoved = this.checkAndRemoveColIfBlank(e.gridX, true);
+      rowRemoved = this.checkAndRemoveRowIfBlank(e.gridY, true);
+      if (colRemoved || rowRemoved) {
+        this.repositionAll(true);
+        return this.recenter();
       }
-      return e[method]('MiddleClick', this.removeSquare);
     };
 
     EditorGrid.prototype.pauseEvents = function() {

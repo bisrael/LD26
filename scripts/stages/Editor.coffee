@@ -13,7 +13,7 @@ define ['Globals',
 
 	class EditorGrid extends Grid
 		constructor: ->
-			super(blankGrid(6,6))
+			super(blankGrid(3,3))
 
 			@showEditorControls()
 			@saveState()
@@ -31,17 +31,23 @@ define ['Globals',
 
 		getState: -> JSON.stringify(@_state)
 
-		printState: =>
-			console.log(@getState())
+		printState: => console.log(@getState())
 
-		resetState: => @newLevel(@_state, yes)
+		resetState: => @newLevel(@_state, no)
 
 		bindEvents: (e, method) ->
-			return unless e?
 			super
-			if method is 'bind' then method = 'unbind'
-			else method = 'bind'
-			e[method]('MiddleClick', @removeSquare)
+			return unless e
+			opp = if method is 'bind' then 'unbind' else 'bind'
+			e[opp]('MiddleClick', @editorRemove)
+
+		editorRemove: (e) =>
+			@removeSquare(e)
+			colRemoved = @checkAndRemoveColIfBlank(e.gridX, yes)
+			rowRemoved = @checkAndRemoveRowIfBlank(e.gridY, yes)
+			if colRemoved or rowRemoved
+				@repositionAll(yes)
+				@recenter()
 
 		pauseEvents: ->	@runForGrid((col,row,e) => @bindEvents(e, 'unbind'))
 		unpauseEvents: ->	@runForGrid((col,row,e) => @bindEvents(e, 'bind'))
