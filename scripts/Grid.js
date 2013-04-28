@@ -26,32 +26,35 @@ define(['Crafty', 'Square'], function(Crafty, Square) {
       for (col = _i = 0, _ref = COLS - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; col = 0 <= _ref ? ++_i : --_i) {
         this._grid[col] = [];
         for (row = _j = 0, _ref1 = ROWS - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; row = 0 <= _ref1 ? ++_j : --_j) {
-          this.newSquareAt(col, row);
+          this.newSquareAt(col, row, true);
         }
       }
     }
 
-    Grid.prototype.newSquareAt = function(x, y) {
+    Grid.prototype.newSquareAt = function(x, y, preventMatching) {
       var e;
 
       e = Crafty.e(Square).shift(GRIDLOC(x), GRIDLOC(y));
-      e.randomizeDirection();
       e.gridX = x;
       e.gridY = y;
       this._grid[x][y] = e;
+      e.randomizeDirection();
+      if (preventMatching) {
+        while (this.matching(e)) {
+          e.randomizeDirection();
+        }
+      }
       return e.bind('RotateEnd', this.checkConditions.bind(this));
     };
 
     Grid.prototype.getSquareAt = function(x, y) {
-      if (x < 0 || y < 0 || x >= COLS || y >= ROWS) {
-        return void 0;
-      } else {
-        return this._grid[x][y];
-      }
+      var _ref;
+
+      return (_ref = this._grid[x]) != null ? _ref[y] : void 0;
     };
 
-    Grid.prototype.checkConditions = function(e) {
-      var checkDir, dir, gridX, gridY, match, toCheck;
+    Grid.prototype.matching = function(e) {
+      var checkDir, dir, gridX, gridY, matching, toCheck;
 
       dir = e.getDirection();
       gridX = e.gridX, gridY = e.gridY;
@@ -73,7 +76,7 @@ define(['Crafty', 'Square'], function(Crafty, Square) {
         return;
       }
       checkDir = toCheck.getDirection();
-      match = (function() {
+      matching = (function() {
         switch (dir) {
           case UP:
             return checkDir === DOWN;
@@ -85,7 +88,16 @@ define(['Crafty', 'Square'], function(Crafty, Square) {
             return checkDir === LEFT;
         }
       })();
-      if (match) {
+      if (matching) {
+        return toCheck;
+      }
+    };
+
+    Grid.prototype.checkConditions = function(e) {
+      var toCheck;
+
+      toCheck = this.matching(e);
+      if (toCheck != null) {
         e.explode();
         return toCheck.explode();
       }

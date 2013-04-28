@@ -96,6 +96,7 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 			@tween({
 				alpha: 0
 			}, 15)
+			@arrow.tween({alpha: 0}, 15)
 
 		ExplodeTweenEnd: ->
 

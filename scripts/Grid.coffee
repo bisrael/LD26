@@ -22,25 +22,26 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 			for col in [0..(COLS-1)]
 				@_grid[col] = []
 				for row in [0..(ROWS-1)]
-					@newSquareAt(col, row)
+					@newSquareAt(col, row, yes)
 
-		newSquareAt: (x, y) ->
+		newSquareAt: (x, y, preventMatching) ->
 			e = Crafty.e(Square).shift(GRIDLOC(x), GRIDLOC(y))
-			e.randomizeDirection()
-
 			e.gridX = x
 			e.gridY = y
-
 			@_grid[x][y] = e
+
+			e.randomizeDirection()
+			if preventMatching
+				while @matching(e) then e.randomizeDirection()
 
 			e.bind('RotateEnd', @checkConditions.bind(@))
 
-		getSquareAt: (x, y) ->
-			if x < 0 or y < 0 or x >= COLS or y >= ROWS
-			then undefined
-			else @_grid[x][y]
+		getSquareAt: (x, y) -> @_grid[x]?[y]
+#			if x < 0 or y < 0 or x >= COLS or y >= ROWS
+#			then undefined
+#			else
 
-		checkConditions: (e) ->
+		matching: (e) ->
 			dir = e.getDirection()
 
 			{gridX, gridY} = e
@@ -56,13 +57,17 @@ define ['Crafty', 'Square'], (Crafty, Square) ->
 			return unless toCheck?
 			checkDir = toCheck.getDirection()
 
-			match = switch dir
+			matching = switch dir
 				when UP then checkDir is DOWN
 				when DOWN then checkDir is UP
 				when LEFT then checkDir is RIGHT
 				when RIGHT then checkDir is LEFT
 
-			if match
+			if matching then return toCheck
+
+		checkConditions: (e) ->
+			toCheck = @matching(e)
+			if toCheck?
 				e.explode()
 				toCheck.explode()
 

@@ -119,7 +119,10 @@ define(['Crafty', 'components/Highlighter', 'ColorScheme'], function(Crafty, Hig
     explode: function() {
       this.unbind('TweenEnd', this.ExplodeTweenEnd);
       this.bind('TweenEnd', this.ExplodeTweenEnd);
-      return this.tween({
+      this.tween({
+        alpha: 0
+      }, 15);
+      return this.arrow.tween({
         alpha: 0
       }, 15);
     },
