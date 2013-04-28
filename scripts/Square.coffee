@@ -9,6 +9,7 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 
 	DEG = (dir) -> dir*90
 	NEXT = (dir) -> (dir+1)%(LIMIT)
+	PREV = (dir) -> if dir then dir-1 else LIMIT-1
 
 	Crafty.c key,
 		init: ->
@@ -31,95 +32,72 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 
 			@attach(@arrow)
 
-			@bind('Click', @Click)
-
 			@bind('MouseOver', @MouseOver)
 			@bind('MouseOut', @MouseOut)
 			@bind('MouseDown', @MouseDown)
 			@bind('MouseUp', @MouseUp)
 
-		Click: (e) ->
-			if @ignoreClick
-				@ignoreClick = no
-				return
+		MouseOver: -> @highlight(15)
+		MouseOut: -> @unhighlight(15)
 
-			next = NEXT(@attr('sqdir'))
-			@attr('sqdir', next)
-			@tween({
-				rotation: if next is 0 then DEG(LIMIT) else DEG(next)
-			}, 15)
-			@unbind('TweenEnd', @TweenEnd)
-			@bind('TweenEnd', @TweenEnd)
+		beginClick: (button) ->
+			@clickBegan = yes
+			@clickButton = button
+			console.log 'button', button
 
-		TweenEnd: (e) ->
-			if @rotation is 360 then @rotation = 0
-			@unbind('TweenEnd', @TweenEnd)
-
-		MouseOver: (e) ->
-			console.log 'over', e
-			@highlight(15)
-			@arrow.highlight(15)
-
-		MouseOut: (e) ->
-			@unhighlight(15)
-			@arrow.unhighlight(15)
-			@endDragging()
+		endClick: ->
+			@clickBegan = no
 
 		MouseDown: (e) ->
-			@dragging = yes
-			@dragStartX = e.realX
-			@dragStartY = e.realY
-			@bind('MouseMove', @MouseMove)
-
-		endDragging: ->
-			return unless @dragging
-			@dragging = no
-			@tween({x: @anchorX, y: @anchorY}, 15)
-			@unbind('MouseMove', @MouseMove)
+			@beginClick(e.mouseButton)
 
 		MouseUp: (e) ->
-			@endDragging()
+			if @clickBegan then @Click()
+			@endClick()
 
-		MouseMove: (e) ->
-			@ignoreClick = yes
-			switch @attr('sqdir')
-				when UP then @adjustUp(e)
-				when RIGHT then @adjustRight(e)
-				when DOWN then @adjustDown(e)
-				when LEFT then @adjustLeft(e)
+		Click: (e) ->
+			curr = @attr('sqdir')
+			next = if @clickButton then curr - 1 else curr + 1
+			@attr('sqdir', next)
 
-		adjustUp: (e) ->
-			return unless e.webkitMovementY
-			ydiff = e.realY - @lastY
-			totalYDiff = e.realY - @dragStartY
-			if totalYDiff < -@h or totalYDiff > 0 then return
-			if @y + ydiff > @anchorY then return
-			@lastY = e.realY
-			@shift(0, ydiff)
+			@unbind('TweenEnd', @RotateTweenEnd)
+			@bind('TweenEnd', @RotateTweenEnd)
+			@tween({
+				rotation: DEG(next)
+			}, 15)
 
-		adjustDown: (e) ->
-			return unless e.webkitMovementY
-			ydiff = e.realY - @lastY
-			totalYDiff = e.realY - @dragStartY
-			if totalYDiff > @h or totalYDiff < 0 then return
-			if @y + ydiff < @anchorY then return
-			@lastY = e.realY
-			@shift(0, ydiff)
+		moveTo: (x,y) ->
+			@unbind('TweenEnd', @MoveTweenEnd)
+			@bind('TweenEnd', @MoveTweenEnd)
+			@tween({
+				x: x,
+				y: y
+			}, 15)
 
-		adjustRight: (e) ->
-			return unless e.webkitMovementX
+		MoveTweenEnd: (e) ->
+			console.log 'Move End' , e
 
-		adjustLeft: (e) ->
-			return unless e.webkitMovementX
+		RotateTweenEnd: (e) ->
+			@unbind('TweenEnd', @RotateTweenEnd)
+			@trigger('RotateEnd', @)
 
 		randomizeDirection: ->
 			dir = ~~(Math.random() * (LIMIT));
 			@attr('sqdir', dir)
 			@rotation = dir*90;
 
-		anchorAt: (x,y) ->
-			@anchorX = x
-			@anchorY = y
-			@attr({x:x, y:y})
+		getDirection: ->
+			dir = @attr('sqdir')
+			if dir < 0 then LIMIT - (dir%LIMIT) else (dir%LIMIT)
+
+		explode: ->
+			@unbind('TweenEnd', @ExplodeTweenEnd)
+			@bind('TweenEnd', @ExplodeTweenEnd)
+			@tween({
+				alpha: 0
+			}, 15)
+
+		ExplodeTweenEnd: ->
+
 
 	return key
