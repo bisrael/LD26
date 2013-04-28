@@ -36,22 +36,22 @@ define ['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], (g, Craft
 
 		beginClick: (button) ->
 			@clickBegan = yes
-			@clickButton = button
 
 		endClick: ->
 			@clickBegan = no
 
 		MouseDown: (e) ->
-			@beginClick(e.mouseButton)
+			@beginClick()
 
 		MouseUp: (e) ->
-			if @clickBegan then @Click()
+			if @clickBegan then @Click(e)
 			@endClick()
 
 		Click: (e) ->
 			return if @dead
+			return @trigger('MiddleClick', @) if e.mouseButton is Crafty.mouseButtons.MIDDLE # primarily an editor feature
 			curr = @attr('sqdir')
-			next = if @clickButton then curr - 1 else curr + 1
+			next = if e.mouseButton is Crafty.mouseButtons.RIGHT then curr - 1 else curr + 1
 			@rebind('TweenEnd', @RotateTweenEnd)
 			@setDirection(next, yes) # yes = animated
 

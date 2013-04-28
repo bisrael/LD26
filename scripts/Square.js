@@ -41,18 +41,17 @@ define(['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], function(
       return this.unhighlight(15);
     },
     beginClick: function(button) {
-      this.clickBegan = true;
-      return this.clickButton = button;
+      return this.clickBegan = true;
     },
     endClick: function() {
       return this.clickBegan = false;
     },
     MouseDown: function(e) {
-      return this.beginClick(e.mouseButton);
+      return this.beginClick();
     },
     MouseUp: function(e) {
       if (this.clickBegan) {
-        this.Click();
+        this.Click(e);
       }
       return this.endClick();
     },
@@ -62,8 +61,11 @@ define(['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], function(
       if (this.dead) {
         return;
       }
+      if (e.mouseButton === Crafty.mouseButtons.MIDDLE) {
+        return this.trigger('MiddleClick', this);
+      }
       curr = this.attr('sqdir');
-      next = this.clickButton ? curr - 1 : curr + 1;
+      next = e.mouseButton === Crafty.mouseButtons.RIGHT ? curr - 1 : curr + 1;
       this.rebind('TweenEnd', this.RotateTweenEnd);
       return this.setDirection(next, true);
     },

@@ -290,6 +290,9 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
       var _this = this;
 
       return this.runForGrid(function(col, row, e) {
+        if (!e) {
+          return;
+        }
         _this.nullOut(e);
         return e.destroy();
       });

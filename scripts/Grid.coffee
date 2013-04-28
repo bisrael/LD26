@@ -163,6 +163,7 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			return
 
 		clearGrid: -> @runForGrid (col, row, e) =>
+			return unless e
 			@nullOut(e)
 			e.destroy()
 
