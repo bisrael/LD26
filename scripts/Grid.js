@@ -2,7 +2,7 @@
 var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
 define(['Crafty', 'Square'], function(Crafty, Square) {
-  var COLS, COL_END, DOWN, END, GRIDLOC, GUTTER, Grid, HORIZ, LEFT, LIMIT, OFFSET, RIGHT, ROWS, ROW_END, SQSIZE, UP;
+  var COLS, COL_END, DIRSTR, DOWN, END, GRIDLOC, GUTTER, Grid, HORIZ, LEFT, LIMIT, OFFSET, RIGHT, ROWS, ROW_END, SQSIZE, UP, __DIRSTR__;
 
   OFFSET = 100;
   GUTTER = 10;
@@ -14,8 +14,12 @@ define(['Crafty', 'Square'], function(Crafty, Square) {
   DOWN = 2;
   LEFT = 3;
   LIMIT = 4;
+  __DIRSTR__ = ["U", "R", "D", "L"];
   HORIZ = function(dir) {
     return !!(dir % 2);
+  };
+  DIRSTR = function(dir) {
+    return __DIRSTR__[dir % LIMIT];
   };
   END = function(dn, n, low, high) {
     if (!dn) {
@@ -56,15 +60,23 @@ define(['Crafty', 'Square'], function(Crafty, Square) {
       e = Crafty.e(Square).shift(GRIDLOC(x), GRIDLOC(y));
       e.gridX = x;
       e.gridY = y;
-      this._grid[x][y] = e;
+      this.setSquareAt(x, y, e);
       e.randomizeDirection();
       if (preventMatching) {
         while (this.matching(e)) {
           e.randomizeDirection();
         }
+      } else {
+        e.justInserted();
       }
       e.bind('RotateEnd', this.checkConditions);
+      e.bind('InsertEnd', this.checkConditions);
+      e.bind('MoveEnd', this.checkConditions);
       return e.bind('ExplodeEnd', this.removeAndReplace);
+    };
+
+    Grid.prototype.setSquareAt = function(x, y, e) {
+      return this._grid[x][y] = e;
     };
 
     Grid.prototype.getSquareAt = function(x, y) {
@@ -113,9 +125,25 @@ define(['Crafty', 'Square'], function(Crafty, Square) {
       }
     };
 
+    Grid.prototype.printGridState = function() {
+      var col, row, sq, str, _i, _j, _ref, _ref1;
+
+      console.log('~~~~~');
+      for (row = _i = 0, _ref = ROWS - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; row = 0 <= _ref ? ++_i : --_i) {
+        str = '';
+        for (col = _j = 0, _ref1 = COLS - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; col = 0 <= _ref1 ? ++_j : --_j) {
+          sq = this.getSquareAt(col, row);
+          str += DIRSTR(sq != null ? sq.getDirection() : "_");
+        }
+        console.log(str);
+      }
+      return console.log('~~~~~');
+    };
+
     Grid.prototype.checkConditions = function(e) {
       var toCheck;
 
+      this.printGridState();
       toCheck = this.matching(e);
       if (toCheck != null) {
         e.explode();
@@ -127,6 +155,7 @@ define(['Crafty', 'Square'], function(Crafty, Square) {
       var gridX, gridY;
 
       gridX = e.gridX, gridY = e.gridY;
+      e.destroy();
       switch (e.getDirection()) {
         case UP:
           this.shiftStartingAt(gridX, gridY, 0, -1);
@@ -143,11 +172,16 @@ define(['Crafty', 'Square'], function(Crafty, Square) {
     };
 
     Grid.prototype.shiftStartingAt = function(x, y, dx, dy) {
-      var col, row, _i, _j, _ref, _ref1, _ref2, _ref3;
+      var col, row, sq, _i, _j, _ref, _ref1, _ref2, _ref3;
 
-      for (col = _i = _ref = x - dx, _ref1 = COL_END(-dx, x); _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; col = _ref <= _ref1 ? ++_i : --_i) {
-        for (row = _j = _ref2 = y - dy, _ref3 = ROW_END(-dy, y); _ref2 <= _ref3 ? _j <= _ref3 : _j >= _ref3; row = _ref2 <= _ref3 ? ++_j : --_j) {
-          this.moveWithinGrid(this.getSquareAt(col, row), dx, dy);
+      for (col = _i = _ref = x - dx, _ref1 = END(-dx, x, -1, COLS); _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; col = _ref <= _ref1 ? ++_i : --_i) {
+        for (row = _j = _ref2 = y - dy, _ref3 = END(-dy, y, -1, ROWS); _ref2 <= _ref3 ? _j <= _ref3 : _j >= _ref3; row = _ref2 <= _ref3 ? ++_j : --_j) {
+          sq = this.getSquareAt(col, row);
+          if (sq != null) {
+            this.moveWithinGrid(sq, dx, dy);
+          } else {
+            this.newSquareAt(col + dx, row + dy);
+          }
         }
       }
     };
@@ -156,8 +190,10 @@ define(['Crafty', 'Square'], function(Crafty, Square) {
       if (!((e != null) && !e.hasExploded())) {
         return;
       }
+      this.setSquareAt(e.gridX, e.gridY, null);
       e.gridX += dx;
       e.gridY += dy;
+      this.setSquareAt(e.gridX, e.gridY, e);
       return e.moveTo(GRIDLOC(e.gridX), GRIDLOC(e.gridY));
     };
 

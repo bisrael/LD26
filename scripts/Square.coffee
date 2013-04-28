@@ -76,7 +76,7 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 
 		MoveTweenEnd: (e) ->
 			@unbind('TweenEnd', @MoveTweenEnd)
-			console.log 'Move End' , e
+			@trigger('MoveEnd', @)
 
 		RotateTweenEnd: (e) ->
 			@unbind('TweenEnd', @RotateTweenEnd)
@@ -90,6 +90,16 @@ define ['Crafty', 'components/Highlighter', 'ColorScheme'], (Crafty, Highlighter
 		getDirection: ->
 			dir = @attr('sqdir')
 			if dir < 0 then LIMIT - (dir%LIMIT) else (dir%LIMIT)
+
+		justInserted: ->
+			@attr('alpha', 0)
+			@unbind('TweenEnd', @InsertTweenEnd)
+			@bind('TweenEnd', @InsertTweenEnd)
+			@tween({alpha: 1}, 15)
+
+		InsertTweenEnd: ->
+			@unbind('TweenEnd', @InsertTweenEnd)
+			@trigger('InsertEnd', @)
 
 		explode: ->
 			@unbind('TweenEnd', @ExplodeTweenEnd)

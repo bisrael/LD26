@@ -77,6 +77,8 @@
 
     initState();
 
+    var noop = function(){};
+
     /**@
     * #Crafty Core
     * @category Core
@@ -590,7 +592,7 @@
                 if (handlers[event] && handlers[event][this[0]]) {
                     var callbacks = handlers[event][this[0]], i = 0, l = callbacks.length;
                     for (; i < l; i++) {
-                        callbacks[i].call(this, data);
+                        (callbacks[i] || noop).call(this, data);
                     }
                 }
                 return this;

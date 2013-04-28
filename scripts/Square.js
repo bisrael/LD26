@@ -94,7 +94,7 @@ define(['Crafty', 'components/Highlighter', 'ColorScheme'], function(Crafty, Hig
     },
     MoveTweenEnd: function(e) {
       this.unbind('TweenEnd', this.MoveTweenEnd);
-      return console.log('Move End', e);
+      return this.trigger('MoveEnd', this);
     },
     RotateTweenEnd: function(e) {
       this.unbind('TweenEnd', this.RotateTweenEnd);
@@ -116,6 +116,18 @@ define(['Crafty', 'components/Highlighter', 'ColorScheme'], function(Crafty, Hig
       } else {
         return dir % LIMIT;
       }
+    },
+    justInserted: function() {
+      this.attr('alpha', 0);
+      this.unbind('TweenEnd', this.InsertTweenEnd);
+      this.bind('TweenEnd', this.InsertTweenEnd);
+      return this.tween({
+        alpha: 1
+      }, 15);
+    },
+    InsertTweenEnd: function() {
+      this.unbind('TweenEnd', this.InsertTweenEnd);
+      return this.trigger('InsertEnd', this);
     },
     explode: function() {
       this.unbind('TweenEnd', this.ExplodeTweenEnd);
