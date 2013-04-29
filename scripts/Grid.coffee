@@ -37,6 +37,7 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			@offsetX = 0
 			@offsetY = 0
 			@alive = 0
+			@actions = 0
 
 		isEstablished: -> !!@_grid
 
@@ -66,6 +67,10 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			e[method]('InsertEnd', @checkConditions)
 			e[method]('MoveEnd', @checkConditions)
 			e[method]('ExplodeEnd', @removeAndReplace)
+			e[method]('UserAction', @incrementActions)
+
+		incrementActions: =>
+			@actions += 1
 
 		_setSquareAt: (x,y,e) ->
 			@_grid[x]?[y] = e

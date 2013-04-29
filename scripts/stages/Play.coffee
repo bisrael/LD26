@@ -9,6 +9,7 @@ define ['Globals',
 	class Play
 		constructor: ->
 			@_level = 0
+			@_score = 0
 			@createHud()
 			@advanceLevel()
 
@@ -25,6 +26,11 @@ define ['Globals',
 			@showResetButton()
 
 			@_hud.shift(0, @_boardSize)
+
+		reset: ->
+			@_level = 0
+			@_score = 0
+			@advanceLevel()
 
 		advanceLevel: ->
 			@_level += 1
@@ -57,7 +63,8 @@ define ['Globals',
 			e.highColor(Scheme.secondary[4])
 			e.bindHighlightMouseEvents()
 			e.bind('Click', =>
-				if @grid then @grid.newLevel(@level.data)
+				if not @level then @reset()
+				else if @grid then @grid.newLevel(@level.data)
 			)
 
 		hideLevelNum: =>
@@ -67,9 +74,10 @@ define ['Globals',
 			e.bind('TweenEnd', @loadLevel)
 
 		loadLevel: =>
-			@_eLevel.text(@_level)
+			@_eLevel.text("#{@_level} : #{@_score}")
 			@level = g.levelData[@_level]
-			@loadIntoGrid()
+			if not @level then @_eLevel.text("Final Score: #{@_score}")
+			else @loadIntoGrid()
 
 		loadIntoGrid: =>
 			@ensureGrid(@level.data)
@@ -80,6 +88,10 @@ define ['Globals',
 			@grid.bind('Victory', @Victory)
 
 		Victory: (grid) =>
+			actions = @grid.actions
+			if actions <= @level.gold then @_score += 3
+			else if actions <= @level.silver then @_score += 2
+			else @_score += 1
 			@grid.destroy()
 			@advanceLevel()
 

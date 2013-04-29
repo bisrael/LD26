@@ -10,6 +10,7 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter', 'c
       this.loadIntoGrid = __bind(this.loadIntoGrid, this);
       this.loadLevel = __bind(this.loadLevel, this);
       this.hideLevelNum = __bind(this.hideLevelNum, this);      this._level = 0;
+      this._score = 0;
       this.createHud();
       this.advanceLevel();
     }
@@ -29,6 +30,12 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter', 'c
       this.showLevelNum();
       this.showResetButton();
       return this._hud.shift(0, this._boardSize);
+    };
+
+    Play.prototype.reset = function() {
+      this._level = 0;
+      this._score = 0;
+      return this.advanceLevel();
     };
 
     Play.prototype.advanceLevel = function() {
@@ -73,7 +80,9 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter', 'c
       e.highColor(Scheme.secondary[4]);
       e.bindHighlightMouseEvents();
       return e.bind('Click', function() {
-        if (_this.grid) {
+        if (!_this.level) {
+          return _this.reset();
+        } else if (_this.grid) {
           return _this.grid.newLevel(_this.level.data);
         }
       });
@@ -91,9 +100,13 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter', 'c
     };
 
     Play.prototype.loadLevel = function() {
-      this._eLevel.text(this._level);
+      this._eLevel.text("" + this._level + " : " + this._score);
       this.level = g.levelData[this._level];
-      return this.loadIntoGrid();
+      if (!this.level) {
+        return this._eLevel.text("Final Score: " + this._score);
+      } else {
+        return this.loadIntoGrid();
+      }
     };
 
     Play.prototype.loadIntoGrid = function() {
@@ -109,6 +122,16 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter', 'c
     };
 
     Play.prototype.Victory = function(grid) {
+      var actions;
+
+      actions = this.grid.actions;
+      if (actions <= this.level.gold) {
+        this._score += 3;
+      } else if (actions <= this.level.silver) {
+        this._score += 2;
+      } else {
+        this._score += 1;
+      }
       this.grid.destroy();
       return this.advanceLevel();
     };

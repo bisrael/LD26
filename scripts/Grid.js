@@ -9,7 +9,8 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
       this.removeAndReplace = __bind(this.removeAndReplace, this);
       this.removeSquare = __bind(this.removeSquare, this);
       this.checkConditions = __bind(this.checkConditions, this);
-      this.Tween = __bind(this.Tween, this);      this.newLevel(levelData, false);
+      this.Tween = __bind(this.Tween, this);
+      this.incrementActions = __bind(this.incrementActions, this);      this.newLevel(levelData, false);
     }
 
     Grid.prototype.newLevel = function(data, animate) {
@@ -61,7 +62,8 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
       this._rowMax = this._rows - 1;
       this.offsetX = 0;
       this.offsetY = 0;
-      return this.alive = 0;
+      this.alive = 0;
+      return this.actions = 0;
     };
 
     Grid.prototype.isEstablished = function() {
@@ -111,7 +113,12 @@ define(['Globals', 'Crafty', 'Square'], function(g, Crafty, Square) {
       e[method]('RotateEnd', this.checkConditions);
       e[method]('InsertEnd', this.checkConditions);
       e[method]('MoveEnd', this.checkConditions);
-      return e[method]('ExplodeEnd', this.removeAndReplace);
+      e[method]('ExplodeEnd', this.removeAndReplace);
+      return e[method]('UserAction', this.incrementActions);
+    };
+
+    Grid.prototype.incrementActions = function() {
+      return this.actions += 1;
     };
 
     Grid.prototype._setSquareAt = function(x, y, e) {
