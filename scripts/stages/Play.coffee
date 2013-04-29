@@ -2,8 +2,9 @@ define ['Globals',
 				'Crafty',
 				'Grid',
 				'ColorScheme',
-				'components/Highlighter']
-, (g, Crafty, Grid, Scheme, Highlighter) ->
+				'components/Highlighter',
+				'components/TweenColor'
+], (g, Crafty, Grid, Scheme, Highlighter, TweenColor) ->
 
 	class Play
 		constructor: ->
@@ -21,7 +22,7 @@ define ['Globals',
 			@_hud.attr({w: Crafty.viewport.width, h: Crafty.viewport.height - @_boardSize})
 
 			@showLevelNum()
-
+			@showResetButton()
 
 			@_hud.shift(0, @_boardSize)
 
@@ -42,6 +43,23 @@ define ['Globals',
 			e.text(@_level)
 			@_eLevel = e
 
+		showResetButton: ->
+			e = Crafty.e("2D, Tween, Canvas, #{Highlighter}")
+			@_hud.attach(e)
+			s = g.sqsize
+			e.attr({
+				w: s
+				h: s
+				x: @_hud.w - g.gutter - s
+				y: @_hud.h - g.gutter - s
+			})
+			e.baseColor(Scheme.secondary[0])
+			e.highColor(Scheme.secondary[4])
+			e.bindHighlightMouseEvents()
+			e.bind('Click', =>
+				if @grid then @grid.newLevel(@level.data)
+			)
+
 		hideLevelNum: =>
 			e = @_eLevel
 			e.tween({alpha: 0}, 60)
@@ -51,9 +69,13 @@ define ['Globals',
 		loadLevel: =>
 			@_eLevel.text(@_level)
 			@level = g.levelData[@_level]
+			@loadIntoGrid()
+
+		loadIntoGrid: =>
 			@ensureGrid(@level.data)
 
 		ensureGrid: (data) ->
+			@grid.destroy() if @grid
 			@grid = new Grid(data)
 			@grid.bind('Victory', @Victory)
 

@@ -12,15 +12,19 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			@center(animate)
 
 		resetEntity: ->
-			@_e = Crafty.e('2D, Tween, Canvas') unless @_e
+			unless @_e
+				@_e = Crafty.e('2D, Tween, Canvas')
+				@_e.bind('TweenEnd', @Tween)
 			@_e.attr({x:0,y:0})
 
 		bind: -> @_e.bind.apply(@_e, arguments)
 		unbind: -> @_e.unbind.apply(@_e, arguments)
 
 		destroy: ->
-			@_grid = null
+			@runForGrid (col,row,e) =>
+				e?.destroy()
 			@_e.destroy()
+			@_grid = null
 
 		setLevelData: (data) ->
 			@_levelData = data
@@ -32,6 +36,7 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			@_rowMax = @_rows - 1
 			@offsetX = 0
 			@offsetY = 0
+			@alive = 0
 
 		isEstablished: -> !!@_grid
 
@@ -49,6 +54,8 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			e = Crafty.e(Square)
 			e.setDirection(dir)
 			e.justInserted()
+
+			@alive += 1
 
 			@setSquareAt(x, y, e, no)
 			@bindEvents(e, 'bind')
@@ -83,6 +90,9 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 
 		getEntity: -> @_e
 
+		Tween: =>
+			@_e.trigger('Centered', @)
+
 		center: (animate) ->
 			{viewport} = Crafty
 
@@ -95,8 +105,11 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			dy = @offsetY - @_e.y
 
 			return unless dx or dy
-			if animate then @_e.tween({x: @offsetX, y: @offsetY}, g.dur)
-			else @_e.shift(dx, dy)
+			if animate
+				@_e.tween({x: @offsetX, y: @offsetY}, g.dur)
+			else
+				@_e.shift(dx, dy)
+				@_e.trigger('Centered', @)
 
 		recenter: -> @center(yes)
 
@@ -181,12 +194,17 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 				ret = @checkAndRemoveColIfBlank(col) or ret
 			return ret
 
-		removeBlanks: (e) ->
+		removePrimaryBlanks: (e) ->
 			if g.isHorizontal(e.getDirection())
 				rowRemoved = @checkAndRemoveRowIfBlank(e.gridY)
-				colRemoved = @checkAndRemoveColIfBlank(e.gridX)
 			else
 				colRemoved = @checkAndRemoveColIfBlank(e.gridX)
+			return colRemoved or rowRemoved
+
+		removeSecondaryBlanks: (e) ->
+			if g.isHorizontal(e.getDirection())
+				colRemoved = @checkAndRemoveColIfBlank(e.gridX)
+			else
 				rowRemoved = @checkAndRemoveRowIfBlank(e.gridY)
 			return colRemoved or rowRemoved
 
@@ -206,8 +224,10 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 			e.explode()
 
 		checkVictory: ->
-			if @_grid.length is 0 or (@_cols is 0 and @_rows is 0)
+			if @alive is 0 or @_grid.length is 0 or (@_cols is 0 and @_rows is 0)
 				@_e.trigger('Victory', @)
+				return yes
+			return no
 
 		checkConditions: (e) =>
 			return if e.hasExploded()
@@ -224,18 +244,14 @@ define ['Globals', 'Crafty', 'Square'], (g, Crafty, Square) ->
 		removeSquare: (e) =>
 			@nullOut(e)
 			e.destroy()
+			@alive -= 1
 
 		removeAndReplace: (e) =>
 			{gridX, gridY} = e
 			dir = e.getDirection()
 
 			@removeSquare(e)
-
-			if @removeBlanks(e)
-				@repositionAll(yes)
-				@recenter()
-				@checkVictory()
-				return
+			return if @checkVictory()
 
 			switch dir
 				when g.up then @shiftStartingAt(gridX, gridY, 0, -1)

@@ -50,6 +50,7 @@ define ['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], (g, Craft
 		Click: (e) ->
 			return if @dead
 			return @trigger('MiddleClick', @) if e.mouseButton is Crafty.mouseButtons.MIDDLE # primarily an editor feature
+			@trigger('UserAction')
 			curr = @attr('sqdir')
 			next = if e.mouseButton is Crafty.mouseButtons.RIGHT then curr - 1 else curr + 1
 			@rebind('TweenEnd', @RotateTweenEnd)

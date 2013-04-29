@@ -38,6 +38,7 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter'], f
       this.showEditorControls();
       this.saveState();
       this.printState();
+      this.bind('Victory', this.resetState);
     }
 
     EditorGrid.prototype.blank = function(w, h) {
@@ -70,6 +71,9 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter'], f
     };
 
     EditorGrid.prototype.resetState = function() {
+      if (this.paused) {
+        this.togglePause();
+      }
       return this.newLevel(this._state, false);
     };
 
@@ -99,6 +103,10 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter'], f
     EditorGrid.prototype.pauseEvents = function() {
       var _this = this;
 
+      if (this.paused) {
+        return;
+      }
+      this.paused = true;
       return this.runForGrid(function(col, row, e) {
         return _this.bindEvents(e, 'unbind');
       });
@@ -107,6 +115,10 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter'], f
     EditorGrid.prototype.unpauseEvents = function() {
       var _this = this;
 
+      if (!this.paused) {
+        return;
+      }
+      this.paused = false;
       return this.runForGrid(function(col, row, e) {
         return _this.bindEvents(e, 'bind');
       });
@@ -159,7 +171,7 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter'], f
     };
 
     EditorGrid.prototype.showEditorControls = function() {
-      var black, darkred, grey, incx, o, paused, red, w,
+      var black, darkred, grey, incx, o, red, w,
         _this = this;
 
       w = 100;
@@ -206,24 +218,23 @@ define(['Globals', 'Crafty', 'Grid', 'ColorScheme', 'components/Highlighter'], f
       };
       o.baseColor = black;
       o.highColor = grey;
-      paused = false;
-      return this._ePause = this.createButton(o, function() {
+      this.togglePause = function() {
         var e;
 
         e = _this._ePause;
-        if (paused) {
+        if (_this.paused) {
           _this.unpauseEvents();
           e.rgb(grey);
           e.highColor(grey);
-          e.baseColor(black);
+          return e.baseColor(black);
         } else {
           _this.pauseEvents();
           e.rgb(red);
           e.highColor(red);
-          e.baseColor(darkred);
+          return e.baseColor(darkred);
         }
-        return paused = !paused;
-      });
+      };
+      return this._ePause = this.createButton(o, this.togglePause);
     };
 
     return EditorGrid;

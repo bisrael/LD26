@@ -64,6 +64,7 @@ define(['Globals', 'Crafty', 'components/Highlighter', 'ColorScheme'], function(
       if (e.mouseButton === Crafty.mouseButtons.MIDDLE) {
         return this.trigger('MiddleClick', this);
       }
+      this.trigger('UserAction');
       curr = this.attr('sqdir');
       next = e.mouseButton === Crafty.mouseButtons.RIGHT ? curr - 1 : curr + 1;
       this.rebind('TweenEnd', this.RotateTweenEnd);

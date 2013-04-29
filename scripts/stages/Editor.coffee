@@ -19,6 +19,8 @@ define ['Globals',
 			@saveState()
 			@printState()
 
+			@bind('Victory', @resetState)
+
 		blank: (w,h) -> @newLevel(blankGrid(w,h))
 
 		_stateCol: (col) =>
@@ -37,7 +39,9 @@ define ['Globals',
 
 		printState: => console.log(@getState())
 
-		resetState: => @newLevel(@_state, no)
+		resetState: =>
+			if @paused then @togglePause()
+			@newLevel(@_state, no)
 
 		bindEvents: (e, method) ->
 			super
@@ -53,8 +57,15 @@ define ['Globals',
 				@repositionAll(yes)
 				@recenter()
 
-		pauseEvents: ->	@runForGrid((col,row,e) => @bindEvents(e, 'unbind'))
-		unpauseEvents: ->	@runForGrid((col,row,e) => @bindEvents(e, 'bind'))
+		pauseEvents: ->
+			return if @paused
+			@paused = yes
+			@runForGrid((col,row,e) => @bindEvents(e, 'unbind'))
+
+		unpauseEvents: ->
+			return unless @paused
+			@paused = no
+			@runForGrid((col,row,e) => @bindEvents(e, 'bind'))
 
 		createText: (o) ->
 			e = Crafty.e("2D, Canvas, Text")
@@ -107,10 +118,9 @@ define ['Globals',
 			red = {r: 230, g: 128, b: 128}
 			o.baseColor = black
 			o.highColor = grey
-			paused = no
-			@_ePause = @createButton(o, =>
+			@togglePause = =>
 				e = @_ePause
-				if paused
+				if @paused
 					@unpauseEvents()
 					e.rgb(grey)
 					e.highColor(grey)
@@ -120,8 +130,8 @@ define ['Globals',
 					e.rgb(red)
 					e.highColor(red)
 					e.baseColor(darkred)
-				paused = !paused
-			)
+
+			@_ePause = @createButton(o, @togglePause)
 
 	window.editor = null
 
